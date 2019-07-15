@@ -28,16 +28,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     log_print('send', 'version')
 
-    data_split = []
-
     while True:
 
         data = s.recv(1024)
-        
-        # RECOVER LAST RESPONSE
-        if not a2b_hex(MAGIC) in data:
-            data = data_split[-1] + data
-        
         data_split = data.split(a2b_hex(MAGIC))
 
         for response in data_split:
