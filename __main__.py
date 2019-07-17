@@ -61,7 +61,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if response_type == 'tx':
                 log_print('new tx', b2a_hex(response).decode())
 
-            elif response_type in ['verack', 'version']:
+            elif response_type == 'version':
                 message_type = 'verack'
                 message = verack()
 
