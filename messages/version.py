@@ -2,7 +2,9 @@ from utils.byte import reverse, int_hex, ip_hex, nonce_hex
 from time import time
 from binascii import b2a_hex
 
-def create_version(int_version, host, port, agent):
+def create_version(int_version, host_port, agent):
+    host, port = host_port
+    
     VERSION = reverse(int_hex(int_version, 4))
     SERVICE = reverse(int_hex(1, 8))
     EPOCH = int_hex(int(time()), 8)

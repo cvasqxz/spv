@@ -15,8 +15,6 @@ from binascii import b2a_hex, a2b_hex
 # MAGIC = 'aaa226a9'
 
 MAGIC = 'f9beb4d9'
-HOST = '72.50.221.9'
-PORT = 8333
 
 agent = '/waleta:0.1/'.encode()
 
@@ -28,14 +26,15 @@ def main():
 
     # SELECT RANDOM NODE
     random_node = dns_seeds[randint(0, len(dns_seeds) - 1)]
+    node_hostport = random_node[4]
     
     # CONNECT SOCKET
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(random_node[4])
+    s.connect(node_hostport)
     log_print('socket', 'connecting to %s:%s' % random_node[4])
 
     # SEND VERSION MESSAGE
-    msg = create_version(70015, HOST, PORT, agent)
+    msg = create_version(70015, node_hostport, agent)
     header = create_header(msg, 'version')
     s.send(a2b_hex(MAGIC + header + msg))
     log_print('send', 'version')
