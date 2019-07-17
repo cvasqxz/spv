@@ -17,9 +17,8 @@ PORT = 8333
 
 agent = '/waleta:0.1/'.encode()
 
-buffer = b''
-
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+def main():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
 
     msg = version(70015, HOST, PORT, agent)
@@ -28,34 +27,36 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     log_print('send', 'version')
 
+    buffer = b''
+
     while True:
 
+        # SOCKET BUFFER
         data = buffer + s.recv(1024)
         buffer_pointer = data.rfind(a2b_hex(MAGIC))
 
         buffer = data[buffer_pointer:]
         data_split = data[:buffer_pointer].split(a2b_hex(MAGIC))
 
+        # RESPONSE PARSER
         for response in data_split:
 
             response_type = ''
             message_type = ''
 
+            # VERIFY RESPONSE
             if len(response) == 0:
                 continue
 
-            # VERIFY RESPONSE
             if verify_header(response):
                 response_type = response[:12].strip(b'\x00').decode()
                 log_print('recv', response_type)
             else:
                 continue
 
-            # PARSE RESPONSE
-
+            # ACTIONS
             if response_type == 'inv':
-                inv(response)
-                message = b2a_hex(response[20:]).decode()
+                message = inv(response)
                 message_type = 'getdata'
 
             if response_type == 'tx':
@@ -76,3 +77,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 log_print('send', message_type)
 
     s.close()
+
+if __name__ == "__main__":
+    main()
