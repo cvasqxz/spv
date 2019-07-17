@@ -2,8 +2,11 @@ import socket
 from time import time
 from random import randint
 from utils.hash import double256
-from utils.message import create_header, version, inv, verify_header, \
-    pong, verack, tx
+from messages.tx import parse_tx
+from messages.header import create_header, verify_header
+from messages.default import pong, verack
+from messages.version import create_version
+from messages.inv import parse_inv
 from utils.log import log_print
 from binascii import b2a_hex, a2b_hex
 
@@ -21,7 +24,7 @@ def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
 
-    msg = version(70015, HOST, PORT, agent)
+    msg = create_version(70015, HOST, PORT, agent)
     header = create_header(msg, 'version')
     s.send(a2b_hex(MAGIC + header + msg))
 
@@ -56,11 +59,11 @@ def main():
 
             # ACTIONS
             if response_type == 'inv':
-                message = inv(response)
+                message = parse_inv(response)
                 message_type = 'getdata'
 
             if response_type == 'tx':
-                tx(response)
+                parse_tx(response)
 
             elif response_type == 'version':
                 message_type = 'verack'
