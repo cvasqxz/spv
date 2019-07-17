@@ -3,7 +3,7 @@ from time import time
 from random import randint
 from utils.hash import double256
 from utils.message import create_header, version, inv, verify_header, \
-    pong, verack
+    pong, verack, tx
 from utils.log import log_print
 from binascii import b2a_hex, a2b_hex
 
@@ -59,7 +59,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 message_type = 'getdata'
 
             if response_type == 'tx':
-                log_print('new tx', b2a_hex(response).decode())
+                tx(response)
 
             elif response_type == 'version':
                 message_type = 'verack'

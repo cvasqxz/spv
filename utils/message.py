@@ -71,3 +71,10 @@ def inv(s):
 
         inv_content = reverse(b2a_hex(inv[4:]))
         log_print('inv #%i' % (i+1), "%s -> %s" % (inv_type, inv_content))
+
+def tx(s):
+    content = s[20:]
+    tx_hash = double256(b2a_hex(content))
+    txid = reverse(b2a_hex(tx_hash))
+
+    log_print('new tx', txid)
