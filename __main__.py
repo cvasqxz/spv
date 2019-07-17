@@ -15,17 +15,19 @@ from binascii import b2a_hex, a2b_hex
 # MAGIC = 'aaa226a9'
 
 MAGIC = 'f9beb4d9'
+DNS = 'seed.bitcoin.sipa.be'
+PORT = 8333
 
 agent = '/waleta:0.1/'.encode()
 
 def main():
 
     # DNS LOOKUP
-    dns_seeds = socket.getaddrinfo('seed.bitcoin.sipa.be', 8333, socket.AF_INET, socket.SOCK_STREAM)
-    log_print('dns', '%i nodes found' % len(dns_seeds))
+    seeds = socket.getaddrinfo(DNS, PORT, socket.AF_INET, socket.SOCK_STREAM)
+    log_print('dns', 'request nodes to %s (%i found)' % (DNS, len(seeds)))
 
     # SELECT RANDOM NODE
-    random_node = dns_seeds[randint(0, len(dns_seeds) - 1)]
+    random_node = seeds[randint(0, len(seeds) - 1)]
     node_hostport = random_node[4]
     
     # CONNECT SOCKET
