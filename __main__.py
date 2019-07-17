@@ -21,13 +21,23 @@ PORT = 8333
 agent = '/waleta:0.1/'.encode()
 
 def main():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((HOST, PORT))
 
+    # DNS LOOKUP
+    dns_seeds = socket.getaddrinfo('seed.bitcoin.sipa.be', 8333, socket.AF_INET, socket.SOCK_STREAM)
+    log_print('dns', '%i nodes found' % len(dns_seeds))
+
+    # SELECT RANDOM NODE
+    random_node = dns_seeds[randint(0, len(dns_seeds) - 1)]
+    
+    # CONNECT SOCKET
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(random_node[4])
+    log_print('socket', 'connecting to %s:%s' % random_node[4])
+
+    # SEND VERSION MESSAGE
     msg = create_version(70015, HOST, PORT, agent)
     header = create_header(msg, 'version')
     s.send(a2b_hex(MAGIC + header + msg))
-
     log_print('send', 'version')
 
     buffer = b''
