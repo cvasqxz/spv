@@ -17,7 +17,7 @@ PORT = 8333
 
 agent = '/waleta:0.1/'.encode()
 
-memory = []
+buffer = b''
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
@@ -30,8 +30,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     while True:
 
-        data = s.recv(1024)
-        data_split = data.split(a2b_hex(MAGIC))
+        data = buffer + s.recv(1024)
+        buffer_pointer = data.rfind(a2b_hex(MAGIC))
+
+        buffer = data[buffer_pointer:]
+        data_split = data[:buffer_pointer].split(a2b_hex(MAGIC))
 
         for response in data_split:
 
@@ -56,9 +59,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 message_type = 'getdata'
 
             if response_type == 'tx':
-                log_print('new tx', b2a_hex(response).decode)
+                log_print('new tx', b2a_hex(response).decode())
 
-            elif response_type == 'verack':
+            elif response_type in ['verack', 'version']:
                 message_type = 'verack'
                 message = verack()
 
