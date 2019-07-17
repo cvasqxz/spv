@@ -10,17 +10,15 @@ from messages.inv import parse_inv
 from utils.log import log_print
 from binascii import b2a_hex, a2b_hex
 
-# HOST = '104.236.244.223'
-# PORT = 21663
-# MAGIC = 'aaa226a9'
-
-MAGIC = 'f9beb4d9'
-DNS = 'seed.bitcoin.sipa.be'
-PORT = 8333
+from configparser import RawConfigParser
 
 agent = '/waleta:0.1/'.encode()
 
-def main():
+def main(config, network='bitcoin'):
+
+    DNS = config.get(network, 'DNS')
+    MAGIC = config.get(network, 'MAGIC')
+    PORT = config.get(network, 'PORT')
 
     # DNS LOOKUP
     seeds = socket.getaddrinfo(DNS, PORT, socket.AF_INET, socket.SOCK_STREAM)
@@ -93,4 +91,8 @@ def main():
     s.close()
 
 if __name__ == "__main__":
-    main()
+
+    config = RawConfigParser()
+    config.read_file(open('config.ini'))
+
+    main(config)
