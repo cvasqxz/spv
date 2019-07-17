@@ -1,5 +1,6 @@
 from time import time
 
+
 def log_print(msg_type, msg):
 
     if msg_type == 'send':

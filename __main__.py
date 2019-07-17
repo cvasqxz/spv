@@ -2,13 +2,14 @@ import socket
 from time import time
 from random import randint
 from utils.hash import double256
-from utils.message import create_header, version, inv, verify_header, pong, verack
+from utils.message import create_header, version, inv, verify_header, \
+    pong, verack
 from utils.log import log_print
 from binascii import b2a_hex, a2b_hex
 
-#HOST = '104.236.244.223'
-#PORT = 21663
-#MAGIC = 'aaa226a9'
+# HOST = '104.236.244.223'
+# PORT = 21663
+# MAGIC = 'aaa226a9'
 
 MAGIC = 'f9beb4d9'
 HOST = '72.50.221.9'
@@ -17,7 +18,6 @@ PORT = 8333
 agent = '/waleta:0.1/'.encode()
 
 memory = []
-
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
@@ -34,7 +34,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         data_split = data.split(a2b_hex(MAGIC))
 
         for response in data_split:
-            
+
             response_type = ''
             message_type = ''
 
@@ -54,14 +54,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 inv(response)
                 message = b2a_hex(response[20:]).decode()
                 message_type = 'getdata'
-            
+
             if response_type == 'tx':
                 log_print('new tx', b2a_hex(response).decode)
-                
+
             elif response_type == 'verack':
                 message_type = 'verack'
                 message = verack()
-
 
             elif response_type == 'ping':
                 message_type = 'pong'
@@ -72,6 +71,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 header = create_header(message, message_type)
                 s.send(a2b_hex(MAGIC + header + message))
                 log_print('send', message_type)
-
 
     s.close()

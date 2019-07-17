@@ -1,12 +1,15 @@
 from binascii import a2b_hex, b2a_hex
 from random import randint
 
+
 def reverse(s):
     return b2a_hex(a2b_hex(s)[::-1]).decode()
+
 
 def int_hex(s, length):
     length_bytes = '{:0%ix}' % (length*2)
     return length_bytes.format(s)
+
 
 def ip_hex(s):
     ip_s = s.split('.')
@@ -19,8 +22,10 @@ def ip_hex(s):
 
     return int_hex(ip_i, 16)
 
+
 def nonce_hex():
     return int_hex(randint(0x1000000000000000, 0xffffffffffffffff), 8)
+
 
 def varint(s):
     if s[0] == 253:
