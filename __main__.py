@@ -5,7 +5,7 @@ from utils.hash import double256
 from messages.tx import parse_tx
 from messages.header import create_header, verify_header
 from messages.default import pong, verack
-from messages.version import create_version
+from messages.version import create_version, parse_version
 from messages.inv import parse_inv
 from utils.log import log_print
 from binascii import b2a_hex, a2b_hex
@@ -75,6 +75,7 @@ def main(config, network='bitcoin'):
                 parse_tx(response)
 
             elif response_type == 'version':
+                parse_version(response)
                 message_type = 'verack'
                 message = verack()
 

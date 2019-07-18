@@ -22,11 +22,6 @@ def ip_hex(s):
 
     return int_hex(ip_i, 16)
 
-
-def nonce_hex():
-    return int_hex(randint(0x1000000000000000, 0xffffffffffffffff), 8)
-
-
 def varint(s):
     if s[0] == 253:
         return int(b2a_hex(s[1:4]), 16)
