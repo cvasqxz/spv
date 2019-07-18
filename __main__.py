@@ -9,6 +9,7 @@ from messages.version import create_version, parse_version
 from messages.sendcmpct import parse_sendcmpct
 from messages.addr import parse_addr
 from messages.inv import parse_inv
+from messages.feefilter import parse_feefilter
 from utils.log import log_print
 from binascii import b2a_hex, a2b_hex
 
@@ -70,8 +71,6 @@ def main(config, network='bitcoin'):
 
             # ACTIONS
 
-
-
             if response_type == 'inv':
                 message = parse_inv(response)
                 message_type = 'getdata'
@@ -93,6 +92,9 @@ def main(config, network='bitcoin'):
 
             elif response_type == 'sendcmpct':
                 parse_sendcmpct(response)
+            
+            elif response_type == 'feefilter':
+                parse_feefilter(response)
 
             # SEND MESSAGE
             if len(message_type) > 0:
