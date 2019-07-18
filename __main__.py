@@ -7,6 +7,7 @@ from messages.header import create_header, verify_header
 from messages.default import pong, verack
 from messages.version import create_version, parse_version
 from messages.sendcmpct import parse_sendcmpct
+from messages.addr import parse_addr
 from messages.inv import parse_inv
 from utils.log import log_print
 from binascii import b2a_hex, a2b_hex
@@ -77,6 +78,9 @@ def main(config, network='bitcoin'):
 
             elif response_type == 'tx':
                 parse_tx(response)
+
+            elif response_type == 'addr':
+                parse_addr(response)
 
             elif response_type == 'version':
                 parse_version(response)
