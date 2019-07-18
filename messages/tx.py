@@ -4,8 +4,7 @@ from utils.byte import reverse
 from utils.log import log_print
 
 def parse_tx(s):
-    content = s[20:]
-    tx_hash = double256(content)
+    tx_hash = double256(s[20:])
     txid = reverse(tx_hash)
 
     log_print('new tx', txid)

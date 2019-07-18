@@ -24,15 +24,13 @@ def create_version(int_version, host_port, agent):
         USERAGENT + START_HEIGHT + RELAY
 
 def parse_version(s):
-    message = s[20:]
+    version = int(reverse(s[20:24]), 16)
 
-    version = int(reverse(message[0:4]), 16)
-
-    epoch = int(reverse(message[12:20]), 16)
+    epoch = int(reverse(s[32:40]), 16)
     date = strftime('%d/%m/%Y %H:%M:%S', localtime(epoch))
 
-    len_agent = message[80]
-    agent = message[81:81+len_agent].decode()
+    len_agent = s[100]
+    agent = s[101:101+len_agent].decode()
 
     log_print("node agent", agent)
     log_print("node time", date)
