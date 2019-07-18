@@ -20,7 +20,7 @@ def parse_inv(s):
         else:
             inv_type = 'ERROR'
 
-        inv_content = reverse(b2a_hex(inv[4:]))
+        inv_content = reverse(inv[4:])
         log_print('inv #%i' % (i+1), "%s -> %s" % (inv_type, inv_content))
 
     return b2a_hex(s[20:]).decode()

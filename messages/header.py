@@ -14,8 +14,8 @@ def create_header(msg, type):
 
 
 def verify_header(s):
-    length = int(reverse(b2a_hex(s[12:16])), 16)
+    length = int(reverse(s[12:16]), 16)
     checksum = s[16:20]
     is_length = length == len(s[20:])
-    is_checksum = checksum == double256(b2a_hex(s[20:]))[:4]
+    is_checksum = checksum == double256(s[20:])[:4]
     return is_length and is_checksum

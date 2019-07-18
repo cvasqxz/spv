@@ -67,11 +67,14 @@ def main(config, network='bitcoin'):
                 continue
 
             # ACTIONS
+
+
+
             if response_type == 'inv':
                 message = parse_inv(response)
                 message_type = 'getdata'
 
-            if response_type == 'tx':
+            elif response_type == 'tx':
                 parse_tx(response)
 
             elif response_type == 'version':
@@ -82,6 +85,9 @@ def main(config, network='bitcoin'):
             elif response_type == 'ping':
                 message_type = 'pong'
                 message = pong(response)
+
+            elif response_type == 'sendcmpct':
+                print(bool(response[21]), response[21:][::-1])
 
             # SEND MESSAGE
             if len(message_type) > 0:

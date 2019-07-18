@@ -3,7 +3,15 @@ from random import randint
 
 
 def reverse(s):
-    return b2a_hex(a2b_hex(s)[::-1]).decode()
+    if type(s) is str:
+        bs = a2b_hex(s)
+    elif type(s) is bytes:
+        bs = s
+    else:
+        return b''
+        
+    return b2a_hex(bs[::-1]).decode()
+
 
 
 def int_hex(s, length):

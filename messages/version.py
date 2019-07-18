@@ -26,9 +26,9 @@ def create_version(int_version, host_port, agent):
 def parse_version(s):
     message = s[20:]
 
-    version = int(reverse(b2a_hex(message[0:4])), 16)
+    version = int(reverse(message[0:4]), 16)
 
-    epoch = int(reverse(b2a_hex(message[12:20])), 16)
+    epoch = int(reverse(message[12:20]), 16)
     date = strftime('%d/%m/%Y %H:%M:%S', localtime(epoch))
 
     len_agent = message[80]
