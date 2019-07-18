@@ -30,6 +30,11 @@ def ip_hex(s):
 
     return int_hex(ip_i, 16)
 
+def hex_ip(s):
+    ipv = s.strip(b'\x00')
+    return str(ipv[-4]) + '.' + str(ipv[-3]) + '.' + str(ipv[-2]) + '.' + str(ipv[-1])
+    
+
 def varint(s):
     if s[0] == 253:
         return int(b2a_hex(s[1:4]), 16)
