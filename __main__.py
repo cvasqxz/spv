@@ -1,10 +1,9 @@
-from configparser import RawConfigParser
-import threading
-from utils.log import log_print
-from random import randint
-from node import start_conn
-
 from socket import getaddrinfo, AF_INET, SOCK_STREAM
+from configparser import RawConfigParser
+from utils.log import log_print
+from threading import Thread
+from node import start_conn
+from random import randint
 
 def main(config, network='bitcoin'):
 
@@ -26,8 +25,9 @@ def main(config, network='bitcoin'):
         if not hostport in nodes:
             nodes.append(hostport)
             log_print("threading", "starting node %i" % len(nodes))
-            t = threading.Thread(target=start_conn, args=(MAGIC, hostport, ))
+            t = Thread(target=start_conn, args=(MAGIC, hostport, ))
             t.start()
+
 
 if __name__ == "__main__":
 

@@ -14,7 +14,10 @@ from binascii import b2a_hex, a2b_hex
 from random import randint
 from time import time
 
+mempool = {}
+
 def start_conn(MAGIC, HOSTPORT):
+    global mempool
 
     # CONNECT SOCKET
     sock = socket(AF_INET, SOCK_STREAM)
@@ -63,7 +66,11 @@ def start_conn(MAGIC, HOSTPORT):
                 message_type = 'getdata'
 
             elif response_type == 'tx':
-                parse_tx(response)
+                txid, tx = parse_tx(response)
+
+                if not tx in mempool.values():
+                    mempool[txid] = tx
+                    print(len(mempool))
 
             elif response_type == 'addr':
                 parse_addr(response)

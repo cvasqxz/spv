@@ -16,6 +16,8 @@ def parse_addr(s):
         service = int(reverse(address[4:12]), 16)
         
         ip = hex_ip(address[12:28])
-        port = str(int(b2a_hex(address[28:30]), 16))
+        port = int(b2a_hex(address[28:30]), 16)
 
-        log_print('new addr', ip + ':' + port + ' (%s)' % date)
+        log_print('new addr', '%s:%i (%s)' % (ip, port, date))
+
+        return (ip, port)
