@@ -1,17 +1,18 @@
-from time import time
-from random import randint
-from utils.hash import double256
-from messages.tx import parse_tx
-from messages.header import create_header, verify_header
-from messages.default import pong, verack
 from messages.version import create_version, parse_version
+from messages.header import create_header, verify_header
+from messages.feefilter import parse_feefilter
 from messages.sendcmpct import parse_sendcmpct
+from messages.default import pong, verack
 from messages.addr import parse_addr
 from messages.inv import parse_inv
-from messages.feefilter import parse_feefilter
+from messages.tx import parse_tx
+from utils.hash import double256
 from utils.log import log_print
-from binascii import b2a_hex, a2b_hex
+
 from socket import socket, AF_INET, SOCK_STREAM
+from binascii import b2a_hex, a2b_hex
+from random import randint
+from time import time
 
 def start_conn(MAGIC, HOSTPORT):
 
