@@ -7,6 +7,9 @@ from node import start_conn
 from socket import getaddrinfo, AF_INET, SOCK_STREAM
 
 def main(config, network='bitcoin'):
+
+    nodes = []
+
     DNS = config.get(network, 'DNS')
     MAGIC = config.get(network, 'MAGIC')
     PORT = config.get(network, 'PORT')
@@ -15,12 +18,16 @@ def main(config, network='bitcoin'):
     seeds = getaddrinfo(DNS, PORT, AF_INET, SOCK_STREAM)
     log_print('dns', 'request nodes to %s (%i found)' % (DNS, len(seeds)))
 
-    # SELECT RANDOM NODE
-    random_node = seeds[randint(0, len(seeds) - 1)]
-    hostport = random_node[4]
+    while len(nodes) < 8:
+        # SELECT RANDOM NODE
+        random_node = seeds[randint(0, len(seeds) - 1)]
+        hostport = random_node[4]
 
-    t = threading.Thread(target=start_conn, args=(MAGIC, hostport, ))
-    t.start()
+        if not hostport in nodes:
+            nodes.append(hostport)
+            log_print("threading", "starting node %i" % len(nodes))
+            t = threading.Thread(target=start_conn, args=(MAGIC, hostport, ))
+            t.start()
 
 if __name__ == "__main__":
 
