@@ -18,7 +18,7 @@ def main(config, network='bitcoin'):
     seeds = getaddrinfo(DNS, PORT, AF_INET, SOCK_STREAM)
     log_print('dns', 'request nodes to %s (%i found)' % (DNS, len(seeds)))
 
-    while len(nodes) < 1:
+    while len(nodes) < 8:
         # SELECT RANDOM NODE
         random_node = seeds[randint(0, len(seeds) - 1)]
         hostport = random_node[4]

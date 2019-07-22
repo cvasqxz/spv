@@ -12,12 +12,12 @@ def extract_tx(s):
 
     tx_size = len(tx) / 1024
 
-    log_print('new tx', '%s (%.2f kb)' % (txid, tx_size))
+    log_print('tx', '%s (%.2f kb)' % (txid, tx_size))
 
     return txid, tx
 
 
-def parse_tx(raw_tx, minfee):
+def parse_tx(raw_tx):
     tx_dict = {}
 
     version = int(reverse(raw_tx[:4]), 16)
@@ -72,5 +72,4 @@ def parse_tx(raw_tx, minfee):
     tx_dict['outputs'] = vout
     tx_dict['locktime'] = locktime
 
-    log_print("tx", tx_dict)
     return tx_dict
