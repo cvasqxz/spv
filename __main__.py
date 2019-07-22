@@ -5,6 +5,7 @@ from threading import Thread
 from node import start_conn
 from random import randint
 
+
 def main(config, network='bitcoin'):
 
     nodes = []
@@ -22,7 +23,7 @@ def main(config, network='bitcoin'):
         random_node = seeds[randint(0, len(seeds) - 1)]
         hostport = random_node[4]
 
-        if not hostport in nodes:
+        if hostport not in nodes:
             nodes.append(hostport)
             log_print("threading", "starting node %i" % len(nodes))
             t = Thread(target=start_conn, args=(MAGIC, hostport, ))

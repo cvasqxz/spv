@@ -1,5 +1,4 @@
 from binascii import a2b_hex, b2a_hex
-from random import randint
 
 
 def reverse(s):
@@ -9,9 +8,8 @@ def reverse(s):
         bs = s
     else:
         return b''
-        
-    return b2a_hex(bs[::-1]).decode()
 
+    return b2a_hex(bs[::-1]).decode()
 
 
 def int_hex(s, length):
@@ -30,10 +28,13 @@ def ip_hex(s):
 
     return int_hex(ip_i, 16)
 
+
 def hex_ip(s):
     ipv = s.strip(b'\x00')
-    return str(ipv[-4]) + '.' + str(ipv[-3]) + '.' + str(ipv[-2]) + '.' + str(ipv[-1])
-    
+    ip = str(ipv[-4]) + '.' + str(ipv[-3]) + '.' + \
+        str(ipv[-2]) + '.' + str(ipv[-1])
+    return ip
+
 
 def varint(s):
     if s[0] == 253:

@@ -9,5 +9,5 @@ def double256(s):
         bs = s
     else:
         return b''
-        
+
     return sha256(sha256(bs).digest()).digest()

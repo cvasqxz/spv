@@ -2,6 +2,7 @@ from binascii import b2a_hex, a2b_hex
 from utils.hash import double256
 from utils.byte import reverse, int_hex
 
+
 def create_header(msg, type):
     length_type = '{:\x00<%i}' % 12
     type_msg = b2a_hex(length_type.format(type).encode()).decode()

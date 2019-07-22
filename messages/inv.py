@@ -2,6 +2,7 @@ from utils.byte import varint, reverse
 from utils.log import log_print
 from binascii import b2a_hex
 
+
 def parse_inv(s):
     length_inv = varint(s[20:])
 

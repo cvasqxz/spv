@@ -1,6 +1,6 @@
-from binascii import b2a_hex
 from utils.log import log_print
 from utils.byte import reverse
+
 
 def parse_sendcmpct(s):
     is_cmpctblock = bool(s[20])
