@@ -5,16 +5,16 @@ from messages.sendcmpct import parse_sendcmpct
 from messages.default import pong, verack
 from messages.addr import parse_addr
 from messages.inv import parse_inv
-from messages.tx import extract_tx, parse_tx
+from messages.tx import extract_tx, parse_tx, tps
 from utils.log import log_print
 
 from socket import socket, AF_INET, SOCK_STREAM
 from binascii import a2b_hex
+from time import time
 
 mempool = []
 
-
-def start_conn(MAGIC, HOSTPORT):
+def start_conn(MAGIC, HOSTPORT, START_TIME):
     global mempool
 
     # CONNECT SOCKET
@@ -71,6 +71,8 @@ def start_conn(MAGIC, HOSTPORT):
                     tx_dict = parse_tx(tx)
                     log_print("tx", tx_dict)
                     print("Added to MemPool (%i transactions)" % len(mempool))
+                    network_tps = tps(mempool, START_TIME)
+                    log_print("network tps", network_tps)
 
             elif response_type == 'addr':
                 parse_addr(response)

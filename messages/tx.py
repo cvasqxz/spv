@@ -2,6 +2,9 @@ from utils.hash import double256
 from utils.byte import reverse, varint
 from utils.log import log_print
 from binascii import b2a_hex
+from time import time
+
+last_tps = 0
 
 
 def extract_tx(s):
@@ -73,3 +76,14 @@ def parse_tx(raw_tx):
     tx_dict['locktime'] = locktime
 
     return tx_dict
+
+
+def tps(mempool, uptime):
+    global last_tps
+
+    instant_tps = len(mempool)/(time() - uptime)
+
+    lowpass_tps = 0.65*last_tps + 0.35*instant_tps
+    last_tps = instant_tps
+
+    return round(lowpass_tps, 2)

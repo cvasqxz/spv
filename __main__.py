@@ -4,6 +4,7 @@ from utils.log import log_print
 from threading import Thread
 from node import start_conn
 from random import randint
+from time import time
 
 
 def main(config, network='bitcoin'):
@@ -18,6 +19,8 @@ def main(config, network='bitcoin'):
     seeds = getaddrinfo(DNS, PORT, AF_INET, SOCK_STREAM)
     log_print('dns', 'request nodes to %s (%i found)' % (DNS, len(seeds)))
 
+    start_time = time()
+
     while len(nodes) < 8:
         # SELECT RANDOM NODE
         random_node = seeds[randint(0, len(seeds) - 1)]
@@ -26,7 +29,7 @@ def main(config, network='bitcoin'):
         if hostport not in nodes:
             nodes.append(hostport)
             log_print("threading", "starting node %i" % len(nodes))
-            t = Thread(target=start_conn, args=(MAGIC, hostport, ))
+            t = Thread(target=start_conn, args=(MAGIC, hostport, start_time, ))
             t.start()
 
 
