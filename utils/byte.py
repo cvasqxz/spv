@@ -38,10 +38,10 @@ def hex_ip(s):
 
 def varint(s):
     if s[0] == 253:
-        return int(b2a_hex(s[1:4]), 16)
+        return int(reverse(s[1:4]), 16) - 1, 4
     elif s[0] == 254:
-        return int(b2a_hex(s[1:6]), 16)
+        return int(reverse(s[1:6]), 16) - 1, 6
     elif s[0] == 255:
-        return int(b2a_hex(s[1:10]), 16)
+        return int(reverse(s[1:10]), 16) - 1, 10
     else:
-        return s[0]
+        return s[0], 1

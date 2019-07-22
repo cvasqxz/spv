@@ -5,17 +5,19 @@ from messages.sendcmpct import parse_sendcmpct
 from messages.default import pong, verack
 from messages.addr import parse_addr
 from messages.inv import parse_inv
-from messages.tx import parse_tx
+from messages.tx import extract_tx, parse_tx
 from utils.log import log_print
 
 from socket import socket, AF_INET, SOCK_STREAM
-from binascii import a2b_hex
+from binascii import a2b_hex, b2a_hex
 
 mempool = {}
 
 
 def start_conn(MAGIC, HOSTPORT):
     global mempool
+
+    minfee = 0
 
     # CONNECT SOCKET
     sock = socket(AF_INET, SOCK_STREAM)
@@ -64,10 +66,10 @@ def start_conn(MAGIC, HOSTPORT):
                 message_type = 'getdata'
 
             elif response_type == 'tx':
-                txid, tx = parse_tx(response)
+                txid, tx = extract_tx(response)
 
                 if tx not in mempool.values():
-                    mempool[txid] = tx
+                    mempool[txid] = parse_tx(tx, minfee)
                     print("Added to MemPool (%i transactions)" % len(mempool))
 
             elif response_type == 'addr':
@@ -86,7 +88,7 @@ def start_conn(MAGIC, HOSTPORT):
                 parse_sendcmpct(response)
 
             elif response_type == 'feefilter':
-                parse_feefilter(response)
+                minfee = parse_feefilter(response)
 
             # SEND MESSAGE
             if len(message_type) > 0:

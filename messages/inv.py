@@ -4,10 +4,10 @@ from binascii import b2a_hex
 
 
 def parse_inv(s):
-    length_inv = varint(s[20:])
+    length_inv, bytes_read = varint(s[20:])
 
     for i in range(length_inv):
-        inv = s[21 + 36*i: 21 + 36*(i+1)]
+        inv = s[20 + bytes_read + 36*i: 20 + bytes_read + 36*(i+1)]
 
         inv_type = inv[:4].rstrip(b'\00')
         if inv_type == b'\x01':

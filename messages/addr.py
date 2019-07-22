@@ -5,11 +5,11 @@ from time import strftime, localtime
 
 
 def parse_addr(s):
-    addresses = varint(s[20:])
+    addresses, bytes_read = varint(s[20:])
     log_print('addr', '%i received' % addresses)
 
     for i in range(addresses):
-        address = s[21 + 30*i: 21 + 30*(i+1)]
+        address = s[20 + bytes_read + 30*i: 20 + bytes_read + 30*(i+1)]
 
         epoch = int(reverse(address[0:4]), 16)
         date = strftime('%d/%m/%Y %H:%M:%S', localtime(epoch))
