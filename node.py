@@ -25,13 +25,13 @@ def start_conn(MAGIC, HOSTPORT):
     sock.connect(HOSTPORT)
     log_print('socket', 'connecting to %s:%s' % HOSTPORT)
 
-    agent = '/cvxz-spv:0.1/'.encode()
+    agent = '/cvxz-spv:0.1/'
 
     # SEND VERSION MESSAGE
     msg = create_version(70015, HOSTPORT, agent)
     header = create_header(msg, 'version')
     sock.send(a2b_hex(MAGIC + header + msg))
-    log_print('send', 'version')
+    log_print('send', 'version message (%s)' % agent)
 
     buffer = b''
 
@@ -56,44 +56,62 @@ def start_conn(MAGIC, HOSTPORT):
 
             if verify_header(response):
                 response_type = response[:12].strip(b'\x00').decode()
-                log_print('recv', response_type)
             else:
                 continue
 
             # ACTIONS
 
             if response_type == 'inv':
-                message = parse_inv(response)
+                invs, message = parse_inv(response)
+                log_print('recv', '%i inventory messages' % len(invs))
+                log_print('invs', invs)
                 message_type = 'getdata'
 
             elif response_type == 'tx':
                 txid, tx = extract_tx(response)
+                log_print('recv', 'new transaction (%s)' % txid)
 
                 if txid not in mempool:
                     mempool.append(txid)
-                    tx_dict = parse_tx(tx)
-                    log_print("tx", tx_dict)
-                    print("Added to MemPool (%i transactions)" % len(mempool))
+                    tx_json = parse_tx(tx)
+                    log_print("tx json", tx_json)
+                    
                     network_tps = tps(mempool, start_time)
                     log_print("network tps", network_tps)
+                else:
+                    continue
 
             elif response_type == 'addr':
-                parse_addr(response)
+                addresses = parse_addr(response)
+                log_print('recv', '%i addresses' % len(addresses))
+                log_print('addr', addresses)
 
             elif response_type == 'version':
-                parse_version(response)
+                agent, _, version = parse_version(response)
+                log_print('recv', 'version (%s, %i)' % (agent, version))
+
                 message_type = 'verack'
+                log_print('recv', 'verack')
                 message = verack()
 
             elif response_type == 'ping':
+                log_print('recv', 'ping')
                 message_type = 'pong'
                 message = pong(response)
 
             elif response_type == 'sendcmpct':
-                parse_sendcmpct(response)
+                use_cmpct, cmpct_num = parse_sendcmpct(response)
+
+                if use_cmpct and cmpct_num == 1:
+                    log_print("recv", 'sendcmpct (use cmpctblock message)')
+                elif cmpct_num == 2:
+                    log_print("recv", "sendcmpct (segwit active)")
+                else:
+                    log_print("recv", "sendcmpct (use inv/header messages)")
 
             elif response_type == 'feefilter':
-                parse_feefilter(response)
+                minfee = parse_feefilter(response)
+                log_print('recv', 'feefilter (%.8f BTC)' % (minfee/1e8))
 
             # SEND MESSAGE
             if len(message_type) > 0:

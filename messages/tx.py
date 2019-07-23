@@ -1,6 +1,5 @@
 from utils.hash import double256
 from utils.byte import reverse, varint, b2a
-from utils.log import log_print
 from time import time
 
 last_tps = 0
@@ -11,10 +10,6 @@ def extract_tx(s):
 
     tx_hash = double256(s[20:])
     txid = reverse(tx_hash)
-
-    tx_size = len(tx) / 1024
-
-    log_print('tx', '%s (%.2f kb)' % (txid, tx_size))
 
     return txid, tx
 

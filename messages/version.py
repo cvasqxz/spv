@@ -1,5 +1,4 @@
 from utils.byte import reverse, int_hex, ip_hex, b2a
-from utils.log import log_print
 from time import time, strftime, localtime
 
 
@@ -15,13 +14,14 @@ def create_version(int_version, host_port, agent):
     NODE_PORT = int_hex(0, 2)
     NONCE = int_hex(0, 8)
     LENGTH_USERAGENT = int_hex(len(agent), 1)
-    USERAGENT = b2a(agent)
+    USERAGENT = b2a(agent.encode())
     START_HEIGHT = reverse(int_hex(1, 4))
     RELAY = reverse(int_hex(1, 1))
 
     return VERSION + SERVICE + EPOCH + SERVICE + RECV_ADDR + RECV_PORT + \
         SERVICE + NODE_ADDR + NODE_PORT + NONCE + LENGTH_USERAGENT + \
         USERAGENT + START_HEIGHT + RELAY
+
 
 def parse_version(s):
     version = int(reverse(s[20:24]), 16)
@@ -32,7 +32,4 @@ def parse_version(s):
     len_agent = s[100]
     agent = s[101:101+len_agent].decode()
 
-    log_print("node agent", agent)
-    log_print("node time", date)
-    log_print("node protocol version", version)
-    
+    return agent, date, version

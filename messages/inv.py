@@ -1,9 +1,10 @@
 from utils.byte import varint, reverse, b2a
-from utils.log import log_print
 
 
 def parse_inv(s):
     length_inv, bytes_read = varint(s[20:])
+
+    inv_array = []
 
     for i in range(length_inv):
         inv = s[20 + bytes_read + 36*i: 20 + bytes_read + 36*(i+1)]
@@ -21,6 +22,7 @@ def parse_inv(s):
             inv_type = 'ERROR'
 
         inv_content = reverse(inv[4:])
-        log_print('inv #%i' % (i+1), "%s -> %s" % (inv_type, inv_content))
 
-    return b2a(s[20:])
+        inv_array.append({'type': inv_type, 'content': inv_content})
+
+    return inv_array, b2a(s[20:])
