@@ -14,8 +14,11 @@ from time import time
 
 mempool = []
 
-def start_conn(MAGIC, HOSTPORT, START_TIME):
+
+def start_conn(MAGIC, HOSTPORT):
     global mempool
+
+    start_time = time()
 
     # CONNECT SOCKET
     sock = socket(AF_INET, SOCK_STREAM)
@@ -71,7 +74,7 @@ def start_conn(MAGIC, HOSTPORT, START_TIME):
                     tx_dict = parse_tx(tx)
                     log_print("tx", tx_dict)
                     print("Added to MemPool (%i transactions)" % len(mempool))
-                    network_tps = tps(mempool, START_TIME)
+                    network_tps = tps(mempool, start_time)
                     log_print("network tps", network_tps)
 
             elif response_type == 'addr':

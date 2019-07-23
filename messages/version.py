@@ -1,7 +1,7 @@
-from utils.byte import reverse, int_hex, ip_hex
+from utils.byte import reverse, int_hex, ip_hex, b2a
 from utils.log import log_print
 from time import time, strftime, localtime
-from binascii import b2a_hex
+
 
 def create_version(int_version, host_port, agent):
     host, port = host_port
@@ -15,7 +15,7 @@ def create_version(int_version, host_port, agent):
     NODE_PORT = int_hex(0, 2)
     NONCE = int_hex(0, 8)
     LENGTH_USERAGENT = int_hex(len(agent), 1)
-    USERAGENT = b2a_hex(agent).decode()
+    USERAGENT = b2a(agent)
     START_HEIGHT = reverse(int_hex(1, 4))
     RELAY = reverse(int_hex(1, 1))
 

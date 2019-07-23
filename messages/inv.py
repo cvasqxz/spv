@@ -1,6 +1,5 @@
-from utils.byte import varint, reverse
+from utils.byte import varint, reverse, b2a
 from utils.log import log_print
-from binascii import b2a_hex
 
 
 def parse_inv(s):
@@ -24,4 +23,4 @@ def parse_inv(s):
         inv_content = reverse(inv[4:])
         log_print('inv #%i' % (i+1), "%s -> %s" % (inv_type, inv_content))
 
-    return b2a_hex(s[20:]).decode()
+    return b2a(s[20:])

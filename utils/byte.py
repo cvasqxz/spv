@@ -1,6 +1,10 @@
 from binascii import a2b_hex, b2a_hex
 
 
+def b2a(s):
+    return b2a_hex(s).decode()
+
+
 def reverse(s):
     if type(s) is str:
         bs = a2b_hex(s)
@@ -9,7 +13,7 @@ def reverse(s):
     else:
         return b''
 
-    return b2a_hex(bs[::-1]).decode()
+    return b2a(bs[::-1])
 
 
 def int_hex(s, length):

@@ -1,8 +1,8 @@
-from binascii import b2a_hex
+from utils.byte import b2a
 
 
 def pong(s):
-    return b2a_hex(s[20:]).decode()
+    return b2a(s[20:])
 
 
 def verack():

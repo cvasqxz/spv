@@ -1,7 +1,6 @@
 from utils.hash import double256
-from utils.byte import reverse, varint
+from utils.byte import reverse, varint, b2a
 from utils.log import log_print
-from binascii import b2a_hex
 from time import time
 
 last_tps = 0
@@ -30,44 +29,55 @@ def parse_tx(raw_tx):
     pointer = 4 + bytes_read
 
     vin = []
+
     while ins_count > 0:
         vin_dict = {}
+
         txid = reverse(raw_tx[pointer:pointer + 32])
         pointer += 32
+
         n = int(reverse(raw_tx[pointer:pointer + 4]), 16)
         pointer += 4
+
         len_sigscript, bytes_read = varint(raw_tx[pointer:])
         pointer += bytes_read
+
         sigscript = raw_tx[pointer:pointer + len_sigscript]
         pointer += len_sigscript
-        ins_count -= 1
+
         sequence = raw_tx[pointer: pointer + 4]
         pointer += 4
 
         vin_dict['txid'] = txid
         vin_dict['n'] = n
-        vin_dict['sigscript'] = b2a_hex(sigscript).decode()
-        vin_dict['sequence'] = b2a_hex(sequence).decode()
+        vin_dict['sigscript'] = b2a(sigscript)
+        vin_dict['sequence'] = b2a(sequence)
 
         vin.append(vin_dict)
+        ins_count -= 1
 
     outs_count, bytes_read = varint(raw_tx[pointer:])
     pointer += bytes_read
 
     vout = []
+
     while outs_count > 0:
         vout_dict = {}
+
         satoshis = int(reverse(raw_tx[pointer:pointer + 8]), 16)
         pointer += 8
+
         len_scriptpubkey, bytes_read = varint(raw_tx[pointer:])
         pointer += bytes_read
+
         scriptpubkey = raw_tx[pointer:pointer + len_scriptpubkey]
         pointer += len_scriptpubkey
-        outs_count -= 1
 
         vout_dict['satoshis'] = satoshis
-        vout_dict['scriptpubkey'] = b2a_hex(scriptpubkey).decode()
+        vout_dict['scriptpubkey'] = b2a(scriptpubkey)
+
         vout.append(vout_dict)
+        outs_count -= 1
 
     locktime = int(reverse(raw_tx[pointer:]), 16)
 
@@ -83,7 +93,7 @@ def tps(mempool, uptime):
 
     instant_tps = len(mempool)/(time() - uptime)
 
-    lowpass_tps = 0.65*last_tps + 0.35*instant_tps
+    lowpass_tps = 0.7*last_tps + 0.3*instant_tps
     last_tps = instant_tps
 
     return round(lowpass_tps, 2)
