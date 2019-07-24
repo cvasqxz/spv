@@ -1,14 +1,17 @@
-from socket import getaddrinfo, AF_INET, SOCK_STREAM
+from socket import getaddrinfo, AF_INET, SOCK_STREAM, socket
 from configparser import RawConfigParser
 from utils.log import log_print
 from threading import Thread
 from node import start_conn
 from random import randint
+from pulsar.apps import wsgi
+from api.methods import hello
+
+sockets = []
+nodes = []
 
 
 def main(config, network='bitcoin'):
-
-    nodes = []
 
     DNS = config.get(network, 'DNS')
     MAGIC = config.get(network, 'MAGIC')
@@ -25,10 +28,16 @@ def main(config, network='bitcoin'):
 
         if hostport not in nodes:
             nodes.append(hostport)
-            log_print("threading", "starting node %i" % len(nodes))
-            t = Thread(target=start_conn, args=(MAGIC, hostport, ))
+
+            # CONNECT SOCKET
+            sock = socket(AF_INET, SOCK_STREAM)
+            sock.connect(hostport)
+            sockets.append(sock)
+            log_print('socket', 'connecting to %s:%s' % hostport)
+            t = Thread(target=start_conn, args=(MAGIC, hostport, sock, ))
             t.start()
 
+    wsgi.WSGIServer(callable=hello).start()
 
 if __name__ == "__main__":
 

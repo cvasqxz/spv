@@ -8,23 +8,16 @@ from messages.addr import parse_addr
 from messages.inv import parse_inv
 from utils.log import log_print
 
-from socket import socket, AF_INET, SOCK_STREAM
 from binascii import a2b_hex
 from time import time
 
 mempool = []
 
 
-def start_conn(MAGIC, HOSTPORT):
+def start_conn(MAGIC, HOSTPORT, sock):
     global mempool
 
     start_time = time()
-
-    # CONNECT SOCKET
-    sock = socket(AF_INET, SOCK_STREAM)
-    sock.connect(HOSTPORT)
-    log_print('socket', 'connecting to %s:%s' % HOSTPORT)
-
     agent = '/cvxz-spv:0.1/'
 
     # SEND VERSION MESSAGE
