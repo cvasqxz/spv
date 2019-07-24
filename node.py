@@ -1,11 +1,11 @@
 from messages.version import create_version, parse_version
 from messages.header import create_header, verify_header
+from messages.tx import extract_tx, parse_tx, tps
 from messages.feefilter import parse_feefilter
 from messages.sendcmpct import parse_sendcmpct
 from messages.default import pong, verack
 from messages.addr import parse_addr
 from messages.inv import parse_inv
-from messages.tx import extract_tx, parse_tx, tps
 from utils.log import log_print
 
 from socket import socket, AF_INET, SOCK_STREAM
@@ -75,7 +75,7 @@ def start_conn(MAGIC, HOSTPORT):
                     mempool.append(txid)
                     tx_json = parse_tx(tx)
                     log_print("tx json", tx_json)
-                    
+
                     network_tps = tps(mempool, start_time)
                     log_print("network tps", network_tps)
                 else:

@@ -1,3 +1,6 @@
+from time import time, strftime, localtime
+
+
 def log_print(msg_type, msg):
 
     if msg_type == 'send':
@@ -7,4 +10,6 @@ def log_print(msg_type, msg):
     else:
         msg_color = '\033[95m'
 
-    print('%s[%s]: \033[0m%s' % (msg_color, msg_type.upper(), msg))
+    date = strftime('%d/%m/%Y %H:%M:%S', localtime(time()))
+
+    print('%s %s[%s]: \033[0m%s' % (date, msg_color, msg_type.upper(), msg))

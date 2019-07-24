@@ -20,5 +20,5 @@ def verify_header(s):
 
     is_length = (length == len(s[20:]))
     is_checksum = (checksum == double256(s[20:])[:4])
-    
+
     return is_length and is_checksum

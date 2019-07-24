@@ -4,7 +4,7 @@ from time import time, strftime, localtime
 
 def create_version(int_version, host_port, agent):
     host, port = host_port
-    
+
     VERSION = reverse(int_hex(int_version, 4))
     SERVICE = reverse(int_hex(1, 8))
     EPOCH = reverse(int_hex(int(time()), 8))
