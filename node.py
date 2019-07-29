@@ -1,6 +1,6 @@
 from messages.version import create_version, parse_version
 from messages.header import create_header, verify_header
-from messages.tx import extract_tx, parse_tx, tps
+from messages.tx import extract_tx, parse_tx
 from messages.feefilter import parse_feefilter
 from messages.sendcmpct import parse_sendcmpct
 from messages.default import pong, verack
@@ -9,15 +9,11 @@ from messages.inv import parse_inv
 from utils.log import log_print
 
 from binascii import a2b_hex
-from time import time
-
-mempool = []
 
 
 def start_conn(MAGIC, HOSTPORT, sock):
-    global mempool
+    global mempool, network_tps
 
-    start_time = time()
     agent = '/cvxz-spv:0.1/'
 
     # SEND VERSION MESSAGE
@@ -62,22 +58,12 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
             elif response_type == 'tx':
                 txid, tx = extract_tx(response)
-                log_print('recv', 'new transaction (%s)' % txid)
-
-                if txid not in mempool:
-                    mempool.append(txid)
-                    tx_json = parse_tx(tx)
-                    log_print("tx json", tx_json)
-
-                    network_tps = tps(mempool, start_time)
-                    log_print("network tps", network_tps)
-                else:
-                    continue
+                txjson = parse_tx(tx)
+                log_print('recv', 'new transaction (%s):\n%s' % (txid, txjson))
 
             elif response_type == 'addr':
-                addresses = parse_addr(response)
-                log_print('recv', '%i addresses' % len(addresses))
-                log_print('addr', addresses)
+                addrs = parse_addr(response)
+                log_print('recv', 'addresses: %s' % addrs)
 
             elif response_type == 'version':
                 agent, _, version = parse_version(response)
