@@ -5,9 +5,6 @@ from threading import Thread
 from node import start_conn
 from random import randint
 
-sockets = []
-nodes = []
-
 
 def main(config, network='bitcoin'):
 
@@ -19,21 +16,27 @@ def main(config, network='bitcoin'):
     seeds = getaddrinfo(DNS, PORT, AF_INET, SOCK_STREAM)
     log_print('dns', 'request nodes to %s (%i found)' % (DNS, len(seeds)))
 
-    while len(nodes) < 1:
-        # SELECT RANDOM NODE
-        random_node = seeds[randint(0, len(seeds) - 1)]
-        hostport = random_node[4]
+    connected = False
 
-        if hostport not in nodes:
-            nodes.append(hostport)
+    while not connected:
+        try:
+            # SELECT RANDOM NODE
+            random_node = seeds[randint(0, len(seeds) - 1)]
+            hostport = random_node[4]
 
             # CONNECT SOCKET
             sock = socket(AF_INET, SOCK_STREAM)
             sock.connect(hostport)
-            sockets.append(sock)
             log_print('socket', 'connecting to %s:%s' % hostport)
+
+            # START THREAD
             t = Thread(target=start_conn, args=(MAGIC, hostport, sock, ))
             t.start()
+
+            connected = True
+
+        except Exception as e:
+            log_print('error', e)
 
 
 if __name__ == "__main__":

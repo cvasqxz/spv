@@ -14,13 +14,14 @@ from binascii import a2b_hex
 def start_conn(MAGIC, HOSTPORT, sock):
     global mempool, network_tps
 
-    agent = '/cvxz-spv:0.1/'
+    client_agent = '/cvxz-spv:0.1/'
+    client_version = 70015
 
     # SEND VERSION MESSAGE
-    msg = create_version(70015, HOSTPORT, agent)
+    msg = create_version(client_version, HOSTPORT, client_agent)
     header = create_header(msg, 'version')
     sock.send(a2b_hex(MAGIC + header + msg))
-    log_print('send', 'version message (%s)' % agent)
+    log_print('send', 'version (%s, %i)' % (client_agent, client_version))
 
     buffer = b''
 
@@ -74,14 +75,8 @@ def start_conn(MAGIC, HOSTPORT, sock):
                 message = pong(response)
 
             elif response_type == 'sendcmpct':
-                use_cmpct, cmpct_num = parse_sendcmpct(response)
-
-                if use_cmpct and cmpct_num == 1:
-                    log_print("recv", 'sendcmpct (use cmpctblock message)')
-                elif cmpct_num == 2:
-                    log_print("recv", "sendcmpct (segwit active)")
-                else:
-                    log_print("recv", "sendcmpct (use inv/header messages)")
+                usecmpct, cmpctnum = parse_sendcmpct(response)
+                log_print("recv", 'sendcmpct (%s, %i)' % (usecmpct, cmpctnum))
 
             elif response_type == 'feefilter':
                 minfee = parse_feefilter(response)
