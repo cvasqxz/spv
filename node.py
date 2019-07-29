@@ -39,17 +39,12 @@ def start_conn(MAGIC, HOSTPORT, sock):
             response_type = ''
             message_type = ''
 
-            # VERIFY RESPONSE
-            if len(response) == 0:
-                continue
-
-            if verify_header(response):
+            if len(response) > 0 and verify_header(response):
                 response_type = response[:12].strip(b'\x00').decode()
             else:
                 continue
 
             # ACTIONS
-
             if response_type == 'inv':
                 invs, message = parse_inv(response)
                 log_print('recv', '%i inventory messages' % len(invs))
@@ -69,8 +64,8 @@ def start_conn(MAGIC, HOSTPORT, sock):
                 agent, _, version = parse_version(response)
                 log_print('recv', 'version (%s, %i)' % (agent, version))
 
-                message_type = 'verack'
                 log_print('recv', 'verack')
+                message_type = 'verack'
                 message = verack()
 
             elif response_type == 'ping':
