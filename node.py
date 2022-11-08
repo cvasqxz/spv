@@ -51,7 +51,7 @@ def start_conn(MAGIC, HOSTPORT, sock):
             # ACTIONS
             if response_type == "inv":
                 invs, message = parse_inv(response)
-                log_print("recv", "%i inventory messages" % len(invs))
+                log_print("recv %s:%s" % HOSTPORT, "%i inventory messages" % len(invs))
 
                 for inv in invs:
                     log_print("inv", "%s: %s" % (inv["type"], inv["content"]))
@@ -61,37 +61,37 @@ def start_conn(MAGIC, HOSTPORT, sock):
             elif response_type == "tx":
                 txid, tx = extract_tx(response)
                 # txjson = parse_tx(tx)
-                log_print("recv", "new transaction (%s)" % txid)
+                log_print("recv %s:%s" % HOSTPORT, "new transaction (%s)" % txid)
 
             elif response_type == "addr":
                 addrs = parse_addr(response)
-                log_print("recv", "addresses: %s" % addrs)
+                log_print("recv %s:%s" % HOSTPORT, "addresses: %s" % addrs)
 
             elif response_type == "version":
                 agent, _, version = parse_version(response)
-                log_print("recv", "version (%s, %i)" % (agent, version))
+                log_print("recv %s:%s" % HOSTPORT, "version (%s, %i)" % (agent, version))
 
-                log_print("recv", "verack")
+                log_print("recv %s:%s" % HOSTPORT, "verack")
                 message_type = "verack"
                 message = verack()
 
             elif response_type == "ping":
-                log_print("recv", "ping")
+                log_print("recv %s:%s" % HOSTPORT, "ping")
                 message_type = "pong"
                 message = pong(response)
 
             elif response_type == "sendcmpct":
                 usecmpct, cmpctnum = parse_sendcmpct(response)
-                log_print("recv", "sendcmpct (%s, %i)" % (usecmpct, cmpctnum))
+                log_print("recv %s:%s" % HOSTPORT, "sendcmpct (%s, %i)" % (usecmpct, cmpctnum))
 
             elif response_type == "feefilter":
                 minfee = parse_feefilter(response)
-                log_print("recv", "feefilter (%.8f BTC)" % (minfee / 1e8))
+                log_print("recv %s:%s" % HOSTPORT, "feefilter (%.8f BTC)" % (minfee / 1e8))
 
             # SEND MESSAGE
             if len(message_type) > 0:
                 header = create_header(message, message_type)
                 sock.send(MAGIC + header + message)
-                log_print("send", message_type)
+                log_print("send %s:%s" % HOSTPORT, message_type)
 
     sock.close()

@@ -8,6 +8,8 @@ def parse_inv(s):
         0x02: "MSG_BLOCK",
         0x03: "MSG_FILTERED_BLOCK",
         0x04: "MSG_CMPCT_BLOCK",
+        0x40000001: "MSG_WITNESS_TX",
+        0x40000002: "MSG_WITNESS_BLOCK"
     }
 
     length_inv, bytes_read = varint(s[20:])
@@ -16,7 +18,7 @@ def parse_inv(s):
 
     for i in range(length_inv):
         inv = s[20 + bytes_read + 36 * i : 20 + bytes_read + 36 * (i + 1)]
-        inv_type = int.from_bytes(inv[:4], "little")
+        inv_type = int.from_bytes(inv[0:4], "little")
         inv_type = inv_types[inv_type]
 
         inv_content = reverse(inv[4:])

@@ -17,10 +17,10 @@ def main(config, network="bitcoin"):
     seeds = getaddrinfo(DNS, PORT, AF_INET, SOCK_STREAM)
     log_print("dns", "request nodes to %s (%i found)" % (DNS, len(seeds)))
 
-    connected = False
+    connected = 0
 
     while True:
-        while not connected:
+        while connected < 3:
             log_print("main", "starting connection process")
             try:
                 # SELECT RANDOM NODE
@@ -44,7 +44,7 @@ def main(config, network="bitcoin"):
                 t.start()
 
                 log_print("main", "connection successfully")
-                connected = True
+                connected += 1
 
             except Exception as e:
                 log_print("error", e)
@@ -52,7 +52,7 @@ def main(config, network="bitcoin"):
         if t.is_alive():
             log_print("main", "Heartbeat <3")
         else:
-            connected = False
+            connected = 0
 
         sleep(5)
 
