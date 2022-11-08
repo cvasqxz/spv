@@ -15,7 +15,7 @@ def parse_tx(raw_tx):
     tx_dict = {}
 
     version = int(reverse(raw_tx[:4]), 16)
-    tx_dict['version'] = version
+    tx_dict["version"] = version
 
     ins_count, bytes_read = varint(raw_tx[4:])
     pointer = 4 + bytes_read
@@ -25,25 +25,25 @@ def parse_tx(raw_tx):
     while ins_count > 0:
         vin_dict = {}
 
-        txid = reverse(raw_tx[pointer:pointer + 32])
+        txid = reverse(raw_tx[pointer : pointer + 32])
         pointer += 32
 
-        n = int(reverse(raw_tx[pointer:pointer + 4]), 16)
+        n = int(reverse(raw_tx[pointer : pointer + 4]), 16)
         pointer += 4
 
         len_sigscript, bytes_read = varint(raw_tx[pointer:])
         pointer += bytes_read
 
-        sigscript = raw_tx[pointer:pointer + len_sigscript]
+        sigscript = raw_tx[pointer : pointer + len_sigscript]
         pointer += len_sigscript
 
-        sequence = raw_tx[pointer: pointer + 4]
+        sequence = raw_tx[pointer : pointer + 4]
         pointer += 4
 
-        vin_dict['txid'] = txid
-        vin_dict['n'] = n
-        vin_dict['sigscript'] = b2a(sigscript)
-        vin_dict['sequence'] = b2a(sequence)
+        vin_dict["txid"] = txid
+        vin_dict["n"] = n
+        vin_dict["sigscript"] = b2a(sigscript)
+        vin_dict["sequence"] = b2a(sequence)
 
         vin.append(vin_dict)
         ins_count -= 1
@@ -56,25 +56,25 @@ def parse_tx(raw_tx):
     while outs_count > 0:
         vout_dict = {}
 
-        satoshis = int(reverse(raw_tx[pointer:pointer + 8]), 16)
+        satoshis = int(reverse(raw_tx[pointer : pointer + 8]), 16)
         pointer += 8
 
         len_scriptpubkey, bytes_read = varint(raw_tx[pointer:])
         pointer += bytes_read
 
-        scriptpubkey = raw_tx[pointer:pointer + len_scriptpubkey]
+        scriptpubkey = raw_tx[pointer : pointer + len_scriptpubkey]
         pointer += len_scriptpubkey
 
-        vout_dict['satoshis'] = satoshis
-        vout_dict['scriptpubkey'] = b2a(scriptpubkey)
+        vout_dict["satoshis"] = satoshis
+        vout_dict["scriptpubkey"] = b2a(scriptpubkey)
 
         vout.append(vout_dict)
         outs_count -= 1
 
     locktime = int(reverse(raw_tx[pointer:]), 16)
 
-    tx_dict['inputs'] = vin
-    tx_dict['outputs'] = vout
-    tx_dict['locktime'] = locktime
+    tx_dict["inputs"] = vin
+    tx_dict["outputs"] = vout
+    tx_dict["locktime"] = locktime
 
     return tx_dict

@@ -8,6 +8,6 @@ def double256(s):
     elif type(s) is bytes:
         bs = s
     else:
-        return b''
+        return b""
 
     return sha256(sha256(bs).digest()).digest()

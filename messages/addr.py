@@ -1,4 +1,5 @@
 from utils.byte import varint, hex_ip, b2a
+
 # from utils.byte import reverse
 # from utils.log import log_print
 # from time import strftime, localtime
@@ -10,7 +11,7 @@ def parse_addr(s):
     addr_array = []
 
     for i in range(addresses):
-        address = s[20 + bytes_read + 30*i: 20 + bytes_read + 30*(i+1)]
+        address = s[20 + bytes_read + 30 * i : 20 + bytes_read + 30 * (i + 1)]
 
         # epoch = int(reverse(address[0:4]), 16)
         # date = strftime('%d/%m/%Y %H:%M:%S', localtime(epoch))

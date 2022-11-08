@@ -6,4 +6,4 @@ def pong(s):
 
 
 def verack():
-    return b''
+    return b""
