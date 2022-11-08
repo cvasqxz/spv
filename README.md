@@ -1,3 +1,4 @@
 # SPV
 
-![Protocol connection](https://bitcoin.org/img/dev/en-p2p-control-messages.svg?1562911561)
+* [Protocol Documentation](https://en.bitcoin.it/wiki/Protocol_documentation) (Bitcoin Wiki)
+* [P2P Network](https://developer.bitcoin.org/devguide/p2p_network.html) (Bitcoin Developer)
