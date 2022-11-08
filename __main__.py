@@ -25,7 +25,7 @@ def main(config, network='bitcoin'):
             try:
                 # SELECT RANDOM NODE
                 random_node = seeds[randint(0, len(seeds) - 1)]
-                hostport = random_node[4]
+                hostport = random_node[-1]
 
                 # CONNECT SOCKET
                 sock = socket(AF_INET, SOCK_STREAM)
@@ -42,14 +42,12 @@ def main(config, network='bitcoin'):
             except Exception as e:
                 log_print('error', e)
 
-        thread_alive = t.is_alive()
-
-        if thread_alive:
-            log_print('main', 'P2P thread: %s' % thread_alive)
+        if t.is_alive():
+            log_print('main', 'Heartbeat <3')
         else:
             connected = False
 
-        sleep(10)
+        sleep(5)
 
 
 if __name__ == "__main__":

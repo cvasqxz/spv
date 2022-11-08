@@ -8,7 +8,7 @@ from messages.addr import parse_addr
 from messages.inv import parse_inv
 from utils.log import log_print
 
-from binascii import a2b_hex
+from binascii import a2b_hex, b2a_hex
 
 
 def start_conn(MAGIC, HOSTPORT, sock):
@@ -17,10 +17,13 @@ def start_conn(MAGIC, HOSTPORT, sock):
     client_agent = '/cvxz-spv:0.1/'
     client_version = 70015
 
+    MAGIC = a2b_hex(MAGIC)
+
     # SEND VERSION MESSAGE
     msg = create_version(client_version, HOSTPORT, client_agent)
     header = create_header(msg, 'version')
-    sock.send(a2b_hex(MAGIC + header + msg))
+    sock.send(MAGIC + header + msg)
+    
     log_print('send', 'version (%s, %i)' % (client_agent, client_version))
 
     buffer = b''
@@ -29,10 +32,10 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
         # SOCKET BUFFER
         data = buffer + sock.recv(1024)
-        buffer_pointer = data.rfind(a2b_hex(MAGIC))
+        buffer_pointer = data.rfind(MAGIC)
 
         buffer = data[buffer_pointer:]
-        data_split = data[:buffer_pointer].split(a2b_hex(MAGIC))
+        data_split = data[:buffer_pointer].split(MAGIC)
 
         # RESPONSE PARSER
         for response in data_split:
@@ -85,7 +88,7 @@ def start_conn(MAGIC, HOSTPORT, sock):
             # SEND MESSAGE
             if len(message_type) > 0:
                 header = create_header(message, message_type)
-                sock.send(a2b_hex(MAGIC + header + message))
+                sock.send(MAGIC + header + message)
                 log_print('send', message_type)
 
     sock.close()

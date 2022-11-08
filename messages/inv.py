@@ -25,4 +25,4 @@ def parse_inv(s):
 
         inv_array.append({'type': inv_type, 'content': inv_content})
 
-    return inv_array, b2a(s[20:])
+    return inv_array, s[20:]
