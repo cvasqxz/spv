@@ -20,7 +20,7 @@ def main(config, network="bitcoin"):
     connected = 0
 
     while True:
-        while connected < 3:
+        while connected < 6:
             log_print("main", "starting connection process")
             try:
                 # SELECT RANDOM NODE
@@ -50,7 +50,7 @@ def main(config, network="bitcoin"):
                 log_print("error", e)
 
         if t.is_alive():
-            log_print("main", "Heartbeat <3")
+            log_print("main", "Active nodes: %s" % connected)
         else:
             connected = 0
 

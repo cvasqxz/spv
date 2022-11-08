@@ -58,33 +58,31 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
                 message_type = "getdata"
 
-            elif response_type == "tx":
+            if response_type == "tx":
                 txid, tx = extract_tx(response)
                 # txjson = parse_tx(tx)
                 log_print("recv %s:%s" % HOSTPORT, "new transaction (%s)" % txid)
 
-            elif response_type == "addr":
+            if response_type == "addr":
                 addrs = parse_addr(response)
                 log_print("recv %s:%s" % HOSTPORT, "addresses: %s" % addrs)
 
-            elif response_type == "version":
+            if response_type == "version":
                 agent, _, version = parse_version(response)
                 log_print("recv %s:%s" % HOSTPORT, "version (%s, %i)" % (agent, version))
-
-                log_print("recv %s:%s" % HOSTPORT, "verack")
                 message_type = "verack"
                 message = verack()
 
-            elif response_type == "ping":
+            if response_type == "ping":
                 log_print("recv %s:%s" % HOSTPORT, "ping")
                 message_type = "pong"
                 message = pong(response)
 
-            elif response_type == "sendcmpct":
+            if response_type == "sendcmpct":
                 usecmpct, cmpctnum = parse_sendcmpct(response)
                 log_print("recv %s:%s" % HOSTPORT, "sendcmpct (%s, %i)" % (usecmpct, cmpctnum))
 
-            elif response_type == "feefilter":
+            if response_type == "feefilter":
                 minfee = parse_feefilter(response)
                 log_print("recv %s:%s" % HOSTPORT, "feefilter (%.8f BTC)" % (minfee / 1e8))
 
