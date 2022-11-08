@@ -52,13 +52,16 @@ def start_conn(MAGIC, HOSTPORT, sock):
             if response_type == "inv":
                 invs, message = parse_inv(response)
                 log_print("recv", "%i inventory messages" % len(invs))
-                log_print("invs", invs)
+
+                for inv in invs:
+                    log_print("inv", "%s: %s" % (inv["type"], inv["content"]))
+
                 message_type = "getdata"
 
             elif response_type == "tx":
                 txid, tx = extract_tx(response)
-                txjson = parse_tx(tx)
-                log_print("recv", "new transaction (%s):\n%s" % (txid, txjson))
+                # txjson = parse_tx(tx)
+                log_print("recv", "new transaction (%s)" % txid)
 
             elif response_type == "addr":
                 addrs = parse_addr(response)

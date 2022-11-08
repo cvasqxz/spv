@@ -12,23 +12,18 @@ def extract_tx(s):
 
 
 def parse_tx(raw_tx):
-    tx_dict = {}
-
-    version = int(reverse(raw_tx[:4]), 16)
-    tx_dict["version"] = version
+    version = int.from_bytes(raw_tx[:4], "little")
 
     ins_count, bytes_read = varint(raw_tx[4:])
     pointer = 4 + bytes_read
 
     vin = []
 
-    while ins_count > 0:
-        vin_dict = {}
-
+    for _ in range(ins_count):
         txid = reverse(raw_tx[pointer : pointer + 32])
         pointer += 32
 
-        n = int(reverse(raw_tx[pointer : pointer + 4]), 16)
+        n = int.from_bytes(raw_tx[pointer : pointer + 4], "little")
         pointer += 4
 
         len_sigscript, bytes_read = varint(raw_tx[pointer:])
@@ -40,23 +35,22 @@ def parse_tx(raw_tx):
         sequence = raw_tx[pointer : pointer + 4]
         pointer += 4
 
-        vin_dict["txid"] = txid
-        vin_dict["n"] = n
-        vin_dict["sigscript"] = b2a(sigscript)
-        vin_dict["sequence"] = b2a(sequence)
-
-        vin.append(vin_dict)
-        ins_count -= 1
+        vin.append(
+            {
+                "txid": txid,
+                "n": n,
+                "sigscript": b2a(sigscript),
+                "sequence": b2a(sequence),
+            }
+        )
 
     outs_count, bytes_read = varint(raw_tx[pointer:])
     pointer += bytes_read
 
     vout = []
 
-    while outs_count > 0:
-        vout_dict = {}
-
-        satoshis = int(reverse(raw_tx[pointer : pointer + 8]), 16)
+    for _ in range(outs_count):
+        satoshis = int.from_bytes(raw_tx[pointer : pointer + 8], "little")
         pointer += 8
 
         len_scriptpubkey, bytes_read = varint(raw_tx[pointer:])
@@ -65,16 +59,8 @@ def parse_tx(raw_tx):
         scriptpubkey = raw_tx[pointer : pointer + len_scriptpubkey]
         pointer += len_scriptpubkey
 
-        vout_dict["satoshis"] = satoshis
-        vout_dict["scriptpubkey"] = b2a(scriptpubkey)
+        vout.append({"satoshis": satoshis, "redeemscript": b2a(scriptpubkey)})
 
-        vout.append(vout_dict)
-        outs_count -= 1
+    locktime = int.from_bytes(raw_tx[pointer:], "little")
 
-    locktime = int(reverse(raw_tx[pointer:]), 16)
-
-    tx_dict["inputs"] = vin
-    tx_dict["outputs"] = vout
-    tx_dict["locktime"] = locktime
-
-    return tx_dict
+    return {"version": version, "ins": vin, "outs": vout, "locktime": locktime}
