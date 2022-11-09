@@ -9,7 +9,7 @@ def parse_inv(s):
         0x03: "MSG_FILTERED_BLOCK",
         0x04: "MSG_CMPCT_BLOCK",
         0x40000001: "MSG_WITNESS_TX",
-        0x40000002: "MSG_WITNESS_BLOCK"
+        0x40000002: "MSG_WITNESS_BLOCK",
     }
 
     length_inv, bytes_read = varint(s[20:])

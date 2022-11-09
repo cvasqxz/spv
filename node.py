@@ -69,7 +69,9 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
             if response_type == "version":
                 agent, _, version = parse_version(response)
-                log_print("recv %s:%s" % HOSTPORT, "version (%s, %i)" % (agent, version))
+                log_print(
+                    "recv %s:%s" % HOSTPORT, "version (%s, %i)" % (agent, version)
+                )
                 message_type = "verack"
                 message = verack()
 
@@ -80,11 +82,15 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
             if response_type == "sendcmpct":
                 usecmpct, cmpctnum = parse_sendcmpct(response)
-                log_print("recv %s:%s" % HOSTPORT, "sendcmpct (%s, %i)" % (usecmpct, cmpctnum))
+                log_print(
+                    "recv %s:%s" % HOSTPORT, "sendcmpct (%s, %i)" % (usecmpct, cmpctnum)
+                )
 
             if response_type == "feefilter":
                 minfee = parse_feefilter(response)
-                log_print("recv %s:%s" % HOSTPORT, "feefilter (%.8f BTC)" % (minfee / 1e8))
+                log_print(
+                    "recv %s:%s" % HOSTPORT, "feefilter (%.8f BTC)" % (minfee / 1e8)
+                )
 
             # SEND MESSAGE
             if len(message_type) > 0:

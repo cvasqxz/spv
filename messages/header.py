@@ -11,7 +11,7 @@ def create_header(msg, type):
 
 
 def verify_header(s):
-    length = int(reverse(s[12:16]), 16)
+    length = int.from_bytes(s[12:16], "little")
     checksum = s[16:20]
 
     is_length = length == len(s[20:])
