@@ -2,7 +2,7 @@ from binascii import a2b_hex, b2a_hex
 
 
 def b2a(s):
-    return b2a_hex(s).decode()
+    return bytes.decode(b2a_hex(s))
 
 
 def reverse(s):

@@ -14,7 +14,7 @@ from binascii import a2b_hex
 def start_conn(MAGIC, HOSTPORT, sock):
     global mempool, network_tps
 
-    client_agent = "/cvxz-spv:0.1/"
+    client_agent = "/cvxz-spv:0.1.1/"
     client_version = 70015
 
     MAGIC = a2b_hex(MAGIC)
@@ -44,19 +44,19 @@ def start_conn(MAGIC, HOSTPORT, sock):
             message_type = ""
 
             if len(response) > 0 and verify_header(response):
-                response_type = response[:12].strip(b"\x00").decode()
+                response_type = bytes.decode(response[:12].strip(b"\x00"))
             else:
                 continue
 
             # ACTIONS
             if response_type == "inv":
                 invs, message = parse_inv(response)
+                message_type = "getdata"
+
                 log_print("recv %s:%s" % HOSTPORT, "%i inventory messages" % len(invs))
 
                 for inv in invs:
                     log_print("inv", "%s: %s" % (inv["type"], inv["content"]))
-
-                message_type = "getdata"
 
             if response_type == "tx":
                 txid, tx = extract_tx(response)
@@ -69,16 +69,16 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
             if response_type == "version":
                 agent, _, version = parse_version(response)
+                message_type = "verack"
+                message = verack()
                 log_print(
                     "recv %s:%s" % HOSTPORT, "version (%s, %i)" % (agent, version)
                 )
-                message_type = "verack"
-                message = verack()
 
             if response_type == "ping":
-                log_print("recv %s:%s" % HOSTPORT, "ping")
                 message_type = "pong"
                 message = pong(response)
+                log_print("recv %s:%s" % HOSTPORT, "ping")
 
             if response_type == "sendcmpct":
                 usecmpct, cmpctnum = parse_sendcmpct(response)

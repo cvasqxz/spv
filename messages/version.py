@@ -44,6 +44,6 @@ def parse_version(s):
     date = strftime("%d/%m/%Y %H:%M:%S", localtime(epoch))
 
     len_agent = s[100]
-    agent = s[101 : 101 + len_agent].decode()
+    agent = bytes.decode(s[101 : 101 + len_agent])
 
     return agent, date, version

@@ -20,7 +20,7 @@ def main(config, network="bitcoin"):
     connected = 0
 
     while True:
-        while connected < 6:
+        while connected < 1:
             log_print("main", "starting connection process")
             try:
                 # SELECT RANDOM NODE
