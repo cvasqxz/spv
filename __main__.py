@@ -1,5 +1,6 @@
 from socket import getaddrinfo, AF_INET, SOCK_STREAM, socket
-from configparser import RawConfigParser
+from configparser import RawConfigParser, NoSectionError
+from argparse import ArgumentParser
 from utils.log import log_print
 from threading import Thread
 from node import start_conn
@@ -7,11 +8,14 @@ from random import randint
 from time import sleep
 
 
-def main(config, network="bitcoin"):
-
-    DNS = config.get(network, "DNS")
-    MAGIC = config.get(network, "MAGIC")
-    PORT = config.get(network, "PORT")
+def main(config, network):
+    try:
+        DNS = config.get(network, "DNS")
+        MAGIC = config.get(network, "MAGIC")
+        PORT = config.get(network, "PORT")
+    except NoSectionError:
+        log_print("error", "Network %s not found" % network)
+        exit()
 
     # DNS LOOKUP
     seeds = getaddrinfo(DNS, PORT, AF_INET, SOCK_STREAM)
@@ -29,6 +33,7 @@ def main(config, network="bitcoin"):
 
                 # CONNECT SOCKET
                 sock = socket(AF_INET, SOCK_STREAM)
+                sock.settimeout(60)
                 sock.connect(hostport)
                 log_print("socket", "connecting to %s:%s" % hostport)
 
@@ -58,8 +63,11 @@ def main(config, network="bitcoin"):
 
 
 if __name__ == "__main__":
-
     config = RawConfigParser()
     config.read_file(open("config.ini"))
 
-    main(config)
+    parser = ArgumentParser(description="multichain transaction snipper")
+    parser.add_argument("--network", default="bitcoin")
+    args = parser.parse_args()
+
+    main(config, args.network)
