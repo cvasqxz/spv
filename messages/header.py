@@ -1,5 +1,4 @@
 from utils.hash import double256
-from utils.byte import reverse
 
 
 def create_header(msg, type):

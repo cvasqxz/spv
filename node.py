@@ -1,14 +1,13 @@
+from messages.default import pong, verack, parse_sendcmpct, parse_feefilter
 from messages.version import create_version, parse_version
 from messages.header import create_header, verify_header
-from messages.tx import extract_tx, parse_tx
-from messages.feefilter import parse_feefilter
-from messages.sendcmpct import parse_sendcmpct
-from messages.default import pong, verack
 from messages.addr import parse_addr
 from messages.inv import parse_inv
+from messages.tx import extract_tx
+
 from utils.log import log_print
 
-from binascii import a2b_hex
+from binascii import hexlify, unhexlify
 
 
 def start_conn(MAGIC, HOSTPORT, sock):
@@ -17,7 +16,7 @@ def start_conn(MAGIC, HOSTPORT, sock):
     client_agent = "/cvxz-spv:0.1.1/"
     client_version = 70015
 
-    MAGIC = a2b_hex(MAGIC)
+    MAGIC = unhexlify(MAGIC)
 
     # SEND VERSION MESSAGE
     msg = create_version(client_version, HOSTPORT, client_agent)
@@ -48,6 +47,9 @@ def start_conn(MAGIC, HOSTPORT, sock):
             else:
                 continue
 
+            # REMOVE HEADER
+            response = response[20:]
+
             # ACTIONS
             if response_type == "inv":
                 invs, message = parse_inv(response)
@@ -56,12 +58,14 @@ def start_conn(MAGIC, HOSTPORT, sock):
                 log_print("recv %s:%s" % HOSTPORT, "%i inventory messages" % len(invs))
 
                 for inv in invs:
-                    log_print("inv", "%s: %s" % (inv["type"], inv["content"]))
+                    log_print("inv", "%s: %s" % (inv["type"], hexlify(inv["content"])))
 
             if response_type == "tx":
                 txid, tx = extract_tx(response)
                 # txjson = parse_tx(tx)
-                log_print("recv %s:%s" % HOSTPORT, "new transaction (%s)" % txid)
+                log_print(
+                    "recv %s:%s" % HOSTPORT, "new transaction (%s)" % hexlify(txid)
+                )
 
             if response_type == "addr":
                 addrs = parse_addr(response)

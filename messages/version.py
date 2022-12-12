@@ -38,12 +38,12 @@ def create_version(int_version, host_port, agent):
 
 
 def parse_version(s):
-    version = int.from_bytes(s[20:24], "little")
-    epoch = int.from_bytes(s[32:40], "little")
+    version = int.from_bytes(s[0:4], "little")
+    epoch = int.from_bytes(s[12:20], "little")
 
     date = strftime("%d/%m/%Y %H:%M:%S", localtime(epoch))
 
-    len_agent = s[100]
-    agent = bytes.decode(s[101 : 101 + len_agent])
+    len_agent = s[80]
+    agent = bytes.decode(s[81 : 81 + len_agent])
 
     return agent, date, version

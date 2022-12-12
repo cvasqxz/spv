@@ -1,12 +1,12 @@
 from utils.hash import double256
-from utils.byte import reverse, varint, b2a
+from utils.byte import varint
+
+from binascii import hexlify
 
 
-def extract_tx(s):
-    tx = s[20:]
-
-    tx_hash = double256(s[20:])
-    txid = reverse(tx_hash)
+def extract_tx(tx):
+    tx_hash = double256(tx)
+    txid = tx_hash[::-1]
 
     return txid, tx
 
@@ -20,7 +20,7 @@ def parse_tx(raw_tx):
     vin = []
 
     for _ in range(ins_count):
-        txid = reverse(raw_tx[pointer : pointer + 32])
+        txid = raw_tx[pointer : pointer + 32][::-1]
         pointer += 32
 
         n = int.from_bytes(raw_tx[pointer : pointer + 4], "little")
@@ -39,8 +39,8 @@ def parse_tx(raw_tx):
             {
                 "txid": txid,
                 "n": n,
-                "sigscript": b2a(sigscript),
-                "sequence": b2a(sequence),
+                "sigscript": hexlify(sigscript),
+                "sequence": hexlify(sequence),
             }
         )
 
@@ -59,7 +59,7 @@ def parse_tx(raw_tx):
         scriptpubkey = raw_tx[pointer : pointer + len_scriptpubkey]
         pointer += len_scriptpubkey
 
-        vout.append({"satoshis": satoshis, "redeemscript": b2a(scriptpubkey)})
+        vout.append({"satoshis": satoshis, "redeemscript": hexlify(scriptpubkey)})
 
     locktime = int.from_bytes(raw_tx[pointer:], "little")
 
