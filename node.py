@@ -2,8 +2,8 @@ from messages.default import pong, verack, parse_sendcmpct, parse_feefilter
 from messages.version import create_version, parse_version
 from messages.header import create_header, verify_header
 from messages.addr import parse_addr
-from messages.inv import parse_inv
 from messages.tx import extract_tx
+from messages.inv import parse_inv
 
 from utils.log import log_print
 
@@ -13,8 +13,8 @@ from binascii import hexlify, unhexlify
 def start_conn(MAGIC, HOSTPORT, sock):
     global mempool, network_tps
 
-    client_agent = "/cvxz-spv:0.1.1/"
-    client_version = 70015
+    client_agent = "/cvxz-spv:0.2/"
+    client_version = 70016
 
     MAGIC = unhexlify(MAGIC)
 
@@ -28,7 +28,6 @@ def start_conn(MAGIC, HOSTPORT, sock):
     buffer = b""
 
     while True:
-
         # SOCKET BUFFER
         data = buffer + sock.recv(1024)
         buffer_pointer = data.rfind(MAGIC)
@@ -38,7 +37,6 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
         # RESPONSE PARSER
         for response in data_split:
-
             response_type = ""
             message_type = ""
 
@@ -62,9 +60,9 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
             if response_type == "tx":
                 txid, tx = extract_tx(response)
-                # txjson = parse_tx(tx)
                 log_print(
-                    "recv %s:%s" % HOSTPORT, "new transaction (%s)" % hexlify(txid)
+                    "recv %s:%s" % HOSTPORT,
+                    "new tx (%s): %s" % (hexlify(txid), hexlify(tx)),
                 )
 
             if response_type == "addr":
@@ -72,11 +70,12 @@ def start_conn(MAGIC, HOSTPORT, sock):
                 log_print("recv %s:%s" % HOSTPORT, "addresses: %s" % addrs)
 
             if response_type == "version":
-                agent, _, version = parse_version(response)
+                agent, service, version = parse_version(response)
                 message_type = "verack"
                 message = verack()
                 log_print(
-                    "recv %s:%s" % HOSTPORT, "version (%s, %i)" % (agent, version)
+                    "recv %s:%s" % HOSTPORT,
+                    "version (%s, %i, %s)" % (agent, version, service),
                 )
 
             if response_type == "ping":

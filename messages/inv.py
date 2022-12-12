@@ -21,6 +21,9 @@ def parse_inv(s):
         inv_type = int.from_bytes(inv[0:4], "little")
         inv_type = inv_types[inv_type]
 
+        if inv_type == "MSG_TX":
+            inv_type = "MSG_WITNESS_TX"
+
         inv_content = inv[4:][::-1]
 
         inv_array.append({"type": inv_type, "content": inv_content})

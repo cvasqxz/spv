@@ -4,38 +4,38 @@ from utils.byte import varint
 from binascii import hexlify
 
 
+def get_satoshis(json_tx):
+    return sum([s["satoshis"] for s in json_tx["outputs"]]) * 1e-8
+
+
 def extract_tx(tx):
     tx_hash = double256(tx)
     txid = tx_hash[::-1]
 
-    return txid, tx
+    version = int.from_bytes(tx[:4], "little")
 
-
-def parse_tx(raw_tx):
-    version = int.from_bytes(raw_tx[:4], "little")
-
-    ins_count, bytes_read = varint(raw_tx[4:])
+    ins_count, bytes_read = varint(tx[4:])
     pointer = 4 + bytes_read
 
-    vin = []
+    inputs = []
 
     for _ in range(ins_count):
-        txid = raw_tx[pointer : pointer + 32][::-1]
+        txid = tx[pointer : pointer + 32][::-1]
         pointer += 32
 
-        n = int.from_bytes(raw_tx[pointer : pointer + 4], "little")
+        n = int.from_bytes(tx[pointer : pointer + 4], "little")
         pointer += 4
 
-        len_sigscript, bytes_read = varint(raw_tx[pointer:])
+        len_sigscript, bytes_read = varint(tx[pointer:])
         pointer += bytes_read
 
-        sigscript = raw_tx[pointer : pointer + len_sigscript]
+        sigscript = tx[pointer : pointer + len_sigscript]
         pointer += len_sigscript
 
-        sequence = raw_tx[pointer : pointer + 4]
+        sequence = tx[pointer : pointer + 4]
         pointer += 4
 
-        vin.append(
+        inputs.append(
             {
                 "txid": txid,
                 "n": n,
@@ -44,23 +44,33 @@ def parse_tx(raw_tx):
             }
         )
 
-    outs_count, bytes_read = varint(raw_tx[pointer:])
+    outs_count, bytes_read = varint(tx[pointer:])
     pointer += bytes_read
 
-    vout = []
+    outputs = []
+    total_satoshis = 0
 
     for _ in range(outs_count):
-        satoshis = int.from_bytes(raw_tx[pointer : pointer + 8], "little")
+        satoshis = int.from_bytes(tx[pointer : pointer + 8], "little")
+        total_satoshis += satoshis
         pointer += 8
 
-        len_scriptpubkey, bytes_read = varint(raw_tx[pointer:])
+        len_scriptpubkey, bytes_read = varint(tx[pointer:])
         pointer += bytes_read
 
-        scriptpubkey = raw_tx[pointer : pointer + len_scriptpubkey]
+        scriptpubkey = tx[pointer : pointer + len_scriptpubkey]
         pointer += len_scriptpubkey
 
-        vout.append({"satoshis": satoshis, "redeemscript": hexlify(scriptpubkey)})
+        outputs.append({"satoshis": satoshis, "redeemscript": hexlify(scriptpubkey)})
 
-    locktime = int.from_bytes(raw_tx[pointer:], "little")
+    locktime = int.from_bytes(tx[pointer:], "little")
 
-    return {"version": version, "ins": vin, "outs": vout, "locktime": locktime}
+    json_tx = {
+        "version": version,
+        "inputs": inputs,
+        "outputs": outputs,
+        "locktime": locktime,
+        "total_satoshis": total_satoshis,
+    }
+
+    return txid, tx
