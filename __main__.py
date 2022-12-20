@@ -1,11 +1,12 @@
 from socket import getaddrinfo, AF_INET, SOCK_STREAM, socket
 from configparser import RawConfigParser, NoSectionError
 from argparse import ArgumentParser
-from utils.log import log_print
 from threading import Thread
-from node import start_conn
 from random import randint
 from time import sleep
+
+from spv.node import start_conn
+from spv.utils.log import log_print
 
 
 def main(config, network):

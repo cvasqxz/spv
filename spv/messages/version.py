@@ -1,5 +1,5 @@
 from time import time, strftime, localtime
-from utils.byte import ip2b
+from spv.utils.byte import ip2b
 from binascii import hexlify
 
 SERVICES = {
@@ -7,7 +7,7 @@ SERVICES = {
     "NODE_BLOOM": (1 << 2),
     "NODE_WITNESS": (1 << 3),
     "NODE_COMPACT_FILTERS": (1 << 6),
-    "NODE_NETWORK_LIMITED": (1 << 10)
+    "NODE_NETWORK_LIMITED": (1 << 10),
 }
 
 
@@ -67,7 +67,3 @@ def parse_version(s):
     agent = bytes.decode(s[81 : 81 + len_agent])
 
     return agent, ", ".join(node_services), version
-
-
-80110100
-

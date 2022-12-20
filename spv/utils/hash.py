@@ -1,5 +1,4 @@
 from hashlib import sha256
-from binascii import a2b_hex
 
 
 def double256(s):

@@ -1,10 +1,10 @@
-from utils.byte import varint, b2ip
+from spv.utils.byte import parse_varint, b2ip
 from time import strftime, localtime
 from binascii import hexlify
 
 
 def parse_addr(s):
-    addresses, bytes_read = varint(s)
+    addresses, bytes_read = parse_varint(s)
 
     addr_array = []
 

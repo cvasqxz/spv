@@ -1,11 +1,17 @@
-from messages.default import pong, verack, parse_sendcmpct, parse_feefilter
-from messages.version import create_version, parse_version
-from messages.header import create_header, verify_header
-from messages.addr import parse_addr
-from messages.tx import extract_tx
-from messages.inv import parse_inv
+from spv.messages.default import (
+    pong,
+    verack,
+    parse_sendcmpct,
+    parse_feefilter,
+    create_feefilter,
+)
+from spv.messages.version import create_version, parse_version
+from spv.messages.header import create_header, verify_header
+from spv.messages.addr import parse_addr
+from spv.messages.tx import extract_tx
+from spv.messages.inv import parse_inv, create_invs
 
-from utils.log import log_print
+from spv.utils.log import log_print
 
 from binascii import hexlify, unhexlify
 
@@ -26,6 +32,9 @@ def start_conn(MAGIC, HOSTPORT, sock):
     log_print("send", "version (%s, %i)" % (client_agent, client_version))
 
     buffer = b""
+    msg_buffer = []
+
+    msg_buffer.append({"message_type": "feefilter", "message": create_feefilter(1000)})
 
     while True:
         # SOCKET BUFFER
@@ -50,19 +59,17 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
             # ACTIONS
             if response_type == "inv":
-                invs, message = parse_inv(response)
-                message_type = "getdata"
-
+                invs = parse_inv(response)
+                msg_buffer.append(
+                    {"message_type": "getdata", "message": create_invs(invs)}
+                )
                 log_print("recv %s:%s" % HOSTPORT, "%i inventory messages" % len(invs))
 
-                for inv in invs:
-                    log_print("inv", "%s: %s" % (inv["type"], hexlify(inv["content"])))
-
             if response_type == "tx":
-                txid, tx = extract_tx(response)
+                json_tx = extract_tx(response)
                 log_print(
                     "recv %s:%s" % HOSTPORT,
-                    "new tx (%s): %s" % (hexlify(txid), hexlify(tx)),
+                    "new tx: %s" % json_tx,
                 )
 
             if response_type == "addr":
@@ -71,16 +78,14 @@ def start_conn(MAGIC, HOSTPORT, sock):
 
             if response_type == "version":
                 agent, service, version = parse_version(response)
-                message_type = "verack"
-                message = verack()
+                msg_buffer.append({"message_type": "verack", "message": verack()})
                 log_print(
                     "recv %s:%s" % HOSTPORT,
                     "version (%s, %i, %s)" % (agent, version, service),
                 )
 
             if response_type == "ping":
-                message_type = "pong"
-                message = pong(response)
+                msg_buffer.append({"message_type": "pong", "message": pong(response)})
                 log_print("recv %s:%s" % HOSTPORT, "ping")
 
             if response_type == "sendcmpct":
@@ -95,10 +100,14 @@ def start_conn(MAGIC, HOSTPORT, sock):
                     "recv %s:%s" % HOSTPORT, "feefilter (%.8f BTC)" % (minfee / 1e8)
                 )
 
-            # SEND MESSAGE
-            if len(message_type) > 0:
-                header = create_header(message, message_type)
-                sock.send(MAGIC + header + message)
-                log_print("send %s:%s" % HOSTPORT, message_type)
+        # SEND MESSAGE
+        if len(msg_buffer) == 0:
+            continue
+
+        for msg in range(len(msg_buffer)):
+            response = msg_buffer.pop()
+            header = create_header(response["message"], response["message_type"])
+            sock.send(MAGIC + header + response["message"])
+            log_print("send %s:%s" % HOSTPORT, response["message_type"])
 
     sock.close()

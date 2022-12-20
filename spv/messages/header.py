@@ -1,4 +1,4 @@
-from utils.hash import double256
+from spv.utils.hash import double256
 
 
 def create_header(msg, type):
