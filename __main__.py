@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from threading import Thread
 from random import randint
 from time import sleep
+from binascii import unhexlify
 
 from spv.node import start_conn
 from spv.utils.log import log_print
@@ -42,7 +43,7 @@ def main(config, network):
                 t = Thread(
                     target=start_conn,
                     args=(
-                        MAGIC,
+                        unhexlify(MAGIC),
                         hostport,
                         sock,
                     ),

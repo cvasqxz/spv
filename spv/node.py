@@ -1,28 +1,16 @@
-from spv.messages.default import (
-    pong,
-    verack,
-    parse_sendcmpct,
-    parse_feefilter,
-    create_feefilter,
-)
+from spv.messages.default import pong, verack, parse_sendcmpct, parse_feefilter, create_feefilter
 from spv.messages.version import create_version, parse_version
 from spv.messages.header import create_header, verify_header
-from spv.messages.addr import parse_addr
-from spv.messages.tx import extract_tx
+from spv.messages.tx import extract_tx, get_satoshis
 from spv.messages.inv import parse_inv, create_invs
-
+from spv.messages.addr import parse_addr
 from spv.utils.log import log_print
-
-from binascii import hexlify, unhexlify
-
 
 def start_conn(MAGIC, HOSTPORT, sock):
     global mempool, network_tps
 
     client_agent = "/cvxz-spv:0.2/"
     client_version = 70016
-
-    MAGIC = unhexlify(MAGIC)
 
     # SEND VERSION MESSAGE
     msg = create_version(client_version, HOSTPORT, client_agent)
@@ -69,7 +57,7 @@ def start_conn(MAGIC, HOSTPORT, sock):
                 json_tx = extract_tx(response)
                 log_print(
                     "recv %s:%s" % HOSTPORT,
-                    "new tx: %s" % json_tx,
+                    "new tx: %s (%.8f BTC)" % (json_tx["txid"], get_satoshis(json_tx)),
                 )
 
             if response_type == "addr":

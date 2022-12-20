@@ -14,9 +14,6 @@ def extract_tx(tx):
     total_satoshis = 0
     pointer = 4
 
-    tx_hash = double256(tx)
-    txid = bytes.decode(hexlify(tx_hash[::-1]))
-
     version = int.from_bytes(tx[:4], "little")
 
     segwit_flag = tx[pointer : pointer + 2] == b"\x00\x01"
@@ -31,7 +28,7 @@ def extract_tx(tx):
         utxo = tx[pointer : pointer + 32][::-1]
         pointer += 32
 
-        n = int.from_bytes(tx[pointer : pointer + 4], "little")
+        vout = int.from_bytes(tx[pointer : pointer + 4], "little")
         pointer += 4
 
         len_sigscript, bytes_read = parse_varint(tx[pointer:])
@@ -45,9 +42,9 @@ def extract_tx(tx):
 
         inputs.append(
             {
-                "txid": bytes.decode(hexlify(utxo)),
-                "n": n,
-                "sigscript": bytes.decode(hexlify(sigscript)),
+                "utxo": bytes.decode(hexlify(utxo)),
+                "vout": vout,
+                "scriptsig": bytes.decode(hexlify(sigscript)),
                 "sequence": bytes.decode(hexlify(sequence)),
             }
         )
@@ -55,7 +52,7 @@ def extract_tx(tx):
     outs_count, bytes_read = parse_varint(tx[pointer:])
     pointer += bytes_read
 
-    for _ in range(outs_count):
+    for n in range(outs_count):
         satoshis = int.from_bytes(tx[pointer : pointer + 8], "little")
         total_satoshis += satoshis
         pointer += 8
@@ -68,10 +65,13 @@ def extract_tx(tx):
 
         outputs.append(
             {
+                "n": n,
                 "satoshis": satoshis,
                 "redeemscript": bytes.decode(hexlify(scriptpubkey))
             }
         )
+
+    vsize = pointer + 4
 
     if segwit_flag:
         for input_index in range(ins_count):
@@ -94,7 +94,19 @@ def extract_tx(tx):
 
     locktime = int.from_bytes(tx[pointer:], "little")
 
+
+    if segwit_flag:
+        simple_tx = tx[0:4] + tx[6:(vsize - 4)] + tx[-4:]
+        tx_hash = double256(simple_tx)
+    else:
+        tx_hash = double256(tx)
+
+    txid = bytes.decode(hexlify(tx_hash[::-1]))
+
+
     json_tx = {
+        "size": len(tx),
+        "vsize": vsize,
         "txid": txid,
         "version": version,
         "inputs": inputs,
