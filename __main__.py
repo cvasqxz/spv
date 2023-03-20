@@ -2,9 +2,8 @@ from socket import getaddrinfo, AF_INET, SOCK_STREAM, socket
 from configparser import RawConfigParser, NoSectionError
 from argparse import ArgumentParser
 from threading import Thread
-from random import randint
-from time import sleep
 from binascii import unhexlify
+from random import choice
 
 from spv.node import start_conn
 from spv.utils.log import log_print
@@ -23,45 +22,27 @@ def main(config, network):
     seeds = getaddrinfo(DNS, PORT, AF_INET, SOCK_STREAM)
     log_print("dns", "request nodes to %s (%i found)" % (DNS, len(seeds)))
 
-    connected = 0
+    try:
+        log_print("main", "starting connection process")
+        
+        # SELECT RANDOM NODE
+        random_node = choice(seeds)[-1]
 
-    while True:
-        while connected < 1:
-            log_print("main", "starting connection process")
-            try:
-                # SELECT RANDOM NODE
-                random_node = seeds[randint(0, len(seeds) - 1)]
-                hostport = random_node[-1]
+        # CONNECT SOCKET
+        log_print("main", "connecting to %s:%s" % random_node)
+        sock = socket(AF_INET, SOCK_STREAM)
+        sock.settimeout(30)
+        sock.connect(random_node)
 
-                # CONNECT SOCKET
-                sock = socket(AF_INET, SOCK_STREAM)
-                sock.settimeout(60)
-                sock.connect(hostport)
-                log_print("socket", "connecting to %s:%s" % hostport)
+        # START THREAD
+        thread_args = (unhexlify(MAGIC), random_node, sock)
+        t = Thread(target=start_conn, args=thread_args,)
+        t.start()
 
-                # START THREAD
-                t = Thread(
-                    target=start_conn,
-                    args=(
-                        unhexlify(MAGIC),
-                        hostport,
-                        sock,
-                    ),
-                )
-                t.start()
+        log_print("main", "connection successfully")
 
-                log_print("main", "connection successfully")
-                connected += 1
-
-            except Exception as e:
-                log_print("error", e)
-
-        if t.is_alive():
-            log_print("main", "Active nodes: %s" % connected)
-        else:
-            connected = 0
-
-        sleep(5)
+    except Exception as e:
+        log_print("error", e)
 
 
 if __name__ == "__main__":
