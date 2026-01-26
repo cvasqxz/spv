@@ -1,5 +1,5 @@
 import socket
-from spv.node import start_conn
+from spv.peer import Peer
 from random import choice
 
 DNS = [
@@ -18,43 +18,33 @@ def main():
     nodes = []
 
     for domain in DNS:
-        print(f"DNS: {domain.upper():<32}", end="")
-        
         try:
             new_nodes = socket.getaddrinfo(domain, PORT)
-            print(f"{len(new_nodes)} IP found")
+            print(f"DNS: {domain.upper():<32} {len(new_nodes)} IP found")
             nodes += new_nodes
         except Exception as e:
             print(f"{e}")
 
-    print(f"\nTOTAL IP FOUND: {len(nodes)}")
-
-    # Filtrar solo sockets TCP (SOCK_STREAM)
     tcp_nodes = [n for n in nodes if n[1] == socket.SOCK_STREAM]
 
     if not tcp_nodes:
-        print("No se encontraron nodos TCP disponibles")
+        print("No IPs found")
         return
 
-    connected = False
-    while not connected:
-        node = choice(tcp_nodes)
-        try:
-            print(f"connecting to {node}")
-            family, kind, proto, _, addr = node
+    node = choice(tcp_nodes)
+    family, kind, proto, _, addr = node
+    host, port = addr
+    print(f"connecting to {host}:{port}")
+    peer = Peer(MAGIC, host, port)
 
-            sock = socket.socket(family, kind, proto)
-            sock.settimeout(60)
-            sock.connect(addr)
-            connected = True
-
-        except Exception as e:
-            print(f"error {e}")
-
-    # START THREAD
-    print("connection successfully")
-    start_conn(MAGIC, addr, sock)
-
+    try:
+        peer.connect()
+        print("connection successfully")
+        peer.handshake()
+        peer.run()
+    except Exception as e:
+        print(f"error {e}")
+        peer.close()
 
 
 if __name__ == "__main__":

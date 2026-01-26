@@ -64,8 +64,6 @@ def parse_version(s):
         if SERVICES[tag] & services > 0:
             node_services.append(tag)
 
-    date = strftime("%d/%m/%Y %H:%M:%S", localtime(epoch))
-
     len_agent = s[80]
     agent = bytes.decode(s[81 : 81 + len_agent])
 
