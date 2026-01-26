@@ -18,6 +18,6 @@ def parse_addr(s):
         ip = b2ip(address[12:28])
         port = int(hexlify(address[28:30]), 16)
 
-        addr_array.append((ip, port))
+        addr_array.append((ip, port, date, service))
 
-        return addr_array
+    return addr_array

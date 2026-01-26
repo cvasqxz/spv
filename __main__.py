@@ -1,56 +1,61 @@
-from socket import getaddrinfo, AF_INET, SOCK_STREAM, socket
-from configparser import RawConfigParser, NoSectionError
-from argparse import ArgumentParser
-from threading import Thread
-from binascii import unhexlify
+import socket
+from spv.node import start_conn
 from random import choice
 
-from spv.node import start_conn
-from spv.utils.log import log_print
+DNS = [
+    "seed.bitcoin.wiz.biz",
+    "dnsseed.bluematt.me",
+    "seed.bitcoinstats.com",
+    "seed.btc.petertodd.net",
+    "seed.bitcoin.sprovoost.nl",
+    "dnsseed.emzy.de",
+    "seed.bitcoin.wiz.biz"
+]
+MAGIC = b'\xf9\xbe\xb4\xd9'
+PORT = 8333
 
+def main():
+    nodes = []
 
-def main(config, network):
-    try:
-        DNS = config.get(network, "DNS")
-        MAGIC = config.get(network, "MAGIC")
-        PORT = config.get(network, "PORT")
-    except NoSectionError:
-        log_print("error", "Network %s not found" % network)
-        exit()
-
-    # DNS LOOKUP
-    seeds = getaddrinfo(DNS, PORT, AF_INET, SOCK_STREAM)
-    log_print("dns", "request nodes to %s (%i found)" % (DNS, len(seeds)))
-
-    try:
-        log_print("main", "starting connection process")
+    for domain in DNS:
+        print(f"DNS: {domain.upper():<32}", end="")
         
-        # SELECT RANDOM NODE
-        random_node = choice(seeds)[-1]
+        try:
+            new_nodes = socket.getaddrinfo(domain, PORT)
+            print(f"{len(new_nodes)} IP found")
+            nodes += new_nodes
+        except Exception as e:
+            print(f"{e}")
 
-        # CONNECT SOCKET
-        log_print("main", "connecting to %s:%s" % random_node)
-        sock = socket(AF_INET, SOCK_STREAM)
-        sock.settimeout(30)
-        sock.connect(random_node)
+    print(f"\nTOTAL IP FOUND: {len(nodes)}")
 
-        # START THREAD
-        thread_args = (unhexlify(MAGIC), random_node, sock)
-        t = Thread(target=start_conn, args=thread_args,)
-        t.start()
+    # Filtrar solo sockets TCP (SOCK_STREAM)
+    tcp_nodes = [n for n in nodes if n[1] == socket.SOCK_STREAM]
 
-        log_print("main", "connection successfully")
+    if not tcp_nodes:
+        print("No se encontraron nodos TCP disponibles")
+        return
 
-    except Exception as e:
-        log_print("error", e)
+    connected = False
+    while not connected:
+        node = choice(tcp_nodes)
+        try:
+            print(f"connecting to {node}")
+            family, kind, proto, _, addr = node
+
+            sock = socket.socket(family, kind, proto)
+            sock.settimeout(60)
+            sock.connect(addr)
+            connected = True
+
+        except Exception as e:
+            print(f"error {e}")
+
+    # START THREAD
+    print("connection successfully")
+    start_conn(MAGIC, addr, sock)
+
 
 
 if __name__ == "__main__":
-    config = RawConfigParser()
-    config.read_file(open("config.ini"))
-
-    parser = ArgumentParser(description="multichain transaction snipper")
-    parser.add_argument("--network", default="bitcoin")
-    args = parser.parse_args()
-
-    main(config, args.network)
+    main()

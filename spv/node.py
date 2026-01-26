@@ -1,44 +1,50 @@
 from spv.messages.default import pong, verack, parse_sendcmpct, parse_feefilter, create_feefilter
 from spv.messages.version import create_version, parse_version
 from spv.messages.header import create_header, verify_header
-from spv.messages.tx import extract_tx, get_satoshis
-from spv.messages.inv import parse_inv, create_invs
 from spv.messages.addr import parse_addr
-from spv.utils.log import log_print
+from spv.messages.inv import parse_inv
+
+from binascii import hexlify
 
 def start_conn(MAGIC, HOSTPORT, sock):
-    global mempool, network_tps
-
-    client_agent = "/cvxz-spv:0.2/"
+    client_agent = f"/cvasqxz_spv:0.1.0/"
     client_version = 70016
 
     # SEND VERSION MESSAGE
-    msg = create_version(client_version, HOSTPORT, client_agent)
-    header = create_header(msg, "version")
-    sock.send(MAGIC + header + msg)
+    version_message = create_version(client_version, HOSTPORT, client_agent)
+    header = create_header("version", version_message)
+    sock.send(MAGIC + header + version_message)
 
-    log_print("send", "version (%s, %i)" % (client_agent, client_version))
+    print(f"send version ({client_agent}, {client_version})")
 
     buffer = b""
-    msg_buffer = []
+    response_array = []
 
-    msg_buffer.append({"message_type": "feefilter", "message": create_feefilter(1000)})
+    response_array.append({"type": "feefilter", "content": create_feefilter(1000)})
 
     while True:
         # SOCKET BUFFER
-        data = buffer + sock.recv(1024)
+        packet_recv = sock.recv(1024)
+
+        if not packet_recv:
+            print("Connection closed by peer")
+            break
+
+        data = buffer + packet_recv
         buffer_pointer = data.rfind(MAGIC)
 
-        buffer = data[buffer_pointer:]
-        data_split = data[:buffer_pointer].split(MAGIC)
+        if buffer_pointer == -1:
+            buffer = data
+            data_split = []
+        else:
+            buffer = data[buffer_pointer:]
+            data_split = data[:buffer_pointer].split(MAGIC)
 
         # RESPONSE PARSER
         for response in data_split:
-            response_type = ""
-            message_type = ""
-
             if len(response) > 0 and verify_header(response):
                 response_type = bytes.decode(response[:12].strip(b"\x00"))
+                print(f"RECV {response_type}")
             else:
                 continue
 
@@ -46,56 +52,38 @@ def start_conn(MAGIC, HOSTPORT, sock):
             response = response[20:]
 
             # ACTIONS
-            if response_type == "inv":
-                invs = parse_inv(response)
-                msg_buffer.append(
-                    {"message_type": "getdata", "message": create_invs(invs)}
-                )
-                log_print("recv %s:%s" % HOSTPORT, "%i inventory messages" % len(invs))
-
-            if response_type == "tx":
-                json_tx = extract_tx(response)
-                log_print(
-                    "recv %s:%s" % HOSTPORT,
-                    "new tx: %s (%.8f BTC)" % (json_tx["txid"], get_satoshis(json_tx)),
-                )
-
             if response_type == "addr":
                 addrs = parse_addr(response)
-                log_print("recv %s:%s" % HOSTPORT, "addresses: %s" % addrs)
+                print(f"\taddresses: {addrs}")
 
             if response_type == "version":
                 agent, service, version = parse_version(response)
-                msg_buffer.append({"message_type": "verack", "message": verack()})
-                log_print(
-                    "recv %s:%s" % HOSTPORT,
-                    "version (%s, %i, %s)" % (agent, version, service),
-                )
+                response_array.append({"type": "verack", "content": verack()})
+                print(f"\tversion ({agent}, {version}, {service})")
 
             if response_type == "ping":
-                msg_buffer.append({"message_type": "pong", "message": pong(response)})
-                log_print("recv %s:%s" % HOSTPORT, "ping")
+                response_array.append({"type": "pong", "content": pong(response)})
 
             if response_type == "sendcmpct":
                 usecmpct, cmpctnum = parse_sendcmpct(response)
-                log_print(
-                    "recv %s:%s" % HOSTPORT, "sendcmpct (%s, %i)" % (usecmpct, cmpctnum)
-                )
+                print(f"\tsendcmpct ({usecmpct}, {cmpctnum})")
 
             if response_type == "feefilter":
                 minfee = parse_feefilter(response)
-                log_print(
-                    "recv %s:%s" % HOSTPORT, "feefilter (%.8f BTC)" % (minfee / 1e8)
-                )
+                print(f"\tfeefilter ({minfee} satoshis)")
 
-        # SEND MESSAGE
-        if len(msg_buffer) == 0:
-            continue
+            if response_type == "inv":
+                invs = parse_inv(response)
+                print(f"\tinv ({len(invs)} headers)")
+                response_array.append({"type": "getdata", "content": response})
 
-        for msg in range(len(msg_buffer)):
-            response = msg_buffer.pop()
-            header = create_header(response["message"], response["message_type"])
-            sock.send(MAGIC + header + response["message"])
-            log_print("send %s:%s" % HOSTPORT, response["message_type"])
+        while response_array:
+            response = response_array.pop(0)
+            response_type    = response["type"]
+            response_content = response["content"]
+            header = create_header(response_type, response_content)
+
+            sock.send(MAGIC + header + response_content)
+            print(f"SEND {response_type}")
 
     sock.close()

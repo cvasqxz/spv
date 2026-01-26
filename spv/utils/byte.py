@@ -35,10 +35,10 @@ def create_varint(i):
         return i.to_bytes(1, byteorder="little")
 
     if i >= 0xFD and i <= 0xFFFF:
-        return b"\xFD" + i.to_bytes(3, byteorder="little")
+        return b"\xFD" + i.to_bytes(2, byteorder="little")
 
     if i > 0xFFFF and i <= 0xFFFFFFFF:
-        return b"\xFE" + i.to_bytes(5, byteorder="little")
+        return b"\xFE" + i.to_bytes(4, byteorder="little")
 
     if i > 0xFFFFFFFF:
-        return b"\xFF" + i.to_bytes(9, byteorder="little")
+        return b"\xFF" + i.to_bytes(8, byteorder="little")

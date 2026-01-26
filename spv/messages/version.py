@@ -12,15 +12,18 @@ SERVICES = {
 
 
 def create_version(int_version, host_port, agent):
-    selected_services = SERVICES["NODE_NETWORK"]
-    selected_services |= SERVICES["NODE_WITNESS"]
-    selected_services |= SERVICES["NODE_NETWORK_LIMITED"]
-
+    '''
+    This node is not a full node. 
+    It may not be able to provide any data 
+    except for the transactions it originates.
+    https://developer.bitcoin.org/reference/p2p_networking.html#version
+    '''
+    
     host, port = host_port
 
     VERSION = (int_version).to_bytes(4, byteorder="little")
-    SERVICE = (selected_services).to_bytes(8, byteorder="little")
-    EPOCH = (int(time())).to_bytes(9, byteorder="little")
+    SERVICE = (0).to_bytes(8, byteorder="little")
+    EPOCH = (int(time())).to_bytes(8, byteorder="little")
     RECV_ADDR = ip2b(host)
     RECV_PORT = (port).to_bytes(2, byteorder="big")
     NODE_ADDR = (0).to_bytes(16, byteorder="big")
