@@ -28,14 +28,17 @@ class Peer:
     def handshake(self):
         version_message = create_version(self.version, self.addr, self.client_agent)
         header = create_header("version", version_message)
-        self.sock.send(self.magic + header + version_message)
+        # MicroPython requires bytearray for socket.send()
+        message = bytearray(self.magic + header + version_message)
+        self.sock.send(message)
         print(f"send version ({self.client_agent}, {self.version})")
 
         self.response_array.append({"type": "feefilter", "content": create_feefilter(1000)})
 
     def send_message(self, msg_type, msg_content):
         header = create_header(msg_type, msg_content)
-        self.sock.send(self.magic + header + msg_content)
+        message = bytearray(self.magic + header + msg_content)
+        self.sock.send(message)
         print(f"SEND {msg_type}")
 
     def _process_messages(self):
@@ -93,7 +96,8 @@ class Peer:
             response_content = response["content"]
             header = create_header(response_type, response_content)
 
-            self.sock.send(self.magic + header + response_content)
+            message = bytearray(self.magic + header + response_content)
+            self.sock.send(message)
             print(f"SEND {response_type}")
 
     def run(self):

@@ -14,6 +14,23 @@ DNS = [
 MAGIC = b'\xf9\xbe\xb4\xd9'
 PORT = 8333
 
+
+def decode_sockaddr(addr):
+    """Decode socket address from MicroPython bytearray format"""
+    if isinstance(addr, (tuple, list)) and isinstance(addr[0], str):
+        # Standard Python format: ('127.0.0.1', 8333)
+        return addr[0], addr[1]
+    elif isinstance(addr, (bytearray, bytes)):
+        # MicroPython format: bytearray with packed address
+        # Bytes 2-3: port (big-endian)
+        # Bytes 4-7: IPv4 address
+        port = int.from_bytes(addr[2:4], "big")
+        ip = ".".join(str(b) for b in addr[4:8])
+        return ip, port
+    else:
+        # Fallback: try direct unpacking
+        return addr[0], addr[1]
+
 def main():
     nodes = []
 
@@ -33,7 +50,8 @@ def main():
 
     node = choice(tcp_nodes)
     family, kind, proto, _, addr = node
-    host, port = addr
+    host, port = decode_sockaddr(addr)
+
     print(f"connecting to {host}:{port}")
     peer = Peer(MAGIC, host, port)
 
