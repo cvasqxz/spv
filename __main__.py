@@ -49,11 +49,11 @@ def main():
         return
 
     node = choice(tcp_nodes)
-    family, kind, proto, _, addr = node
-    host, port = decode_sockaddr(addr)
+    family, kind, proto, _, sockaddr = node
+    host, port = decode_sockaddr(sockaddr)
 
     print(f"connecting to {host}:{port}")
-    peer = Peer(MAGIC, host, port)
+    peer = Peer(MAGIC, sockaddr, host, port)
 
     try:
         peer.connect()

@@ -7,9 +7,11 @@ from spv.messages.inv import parse_inv
 
 
 class Peer:
-    def __init__(self, magic, host, port, client_agent="/cvasqxz_spv:0.1.0/", version=70016):
+    def __init__(self, magic, sockaddr, host, port, client_agent="/cvasqxz_spv:0.1.0/", version=70016):
         self.magic = magic
-        self.addr = (host, port)
+        self.sockaddr = sockaddr  # Native socket address for connect()
+        self.host = host           # String IP for version message
+        self.port = port           # Integer port for version message
         self.client_agent = client_agent
         self.version = version
         self.sock = None
@@ -23,10 +25,10 @@ class Peer:
     def connect(self, timeout=60):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(timeout)
-        self.sock.connect(self.addr)
+        self.sock.connect(self.sockaddr)
 
     def handshake(self):
-        version_message = create_version(self.version, self.addr, self.client_agent)
+        version_message = create_version(self.version, (self.host, self.port), self.client_agent)
         header = create_header("version", version_message)
         # MicroPython requires bytearray for socket.send()
         message = bytearray(self.magic + header + version_message)
