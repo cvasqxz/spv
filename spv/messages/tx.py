@@ -1,5 +1,5 @@
 from spv.utils.hash import double256
-from spv.utils.byte import parse_varint
+from spv.utils.byte import parse_varint, reverse_bytes
 
 from binascii import hexlify
 
@@ -25,7 +25,7 @@ def extract_tx(tx):
     pointer += bytes_read
 
     for _ in range(ins_count):
-        utxo = tx[pointer : pointer + 32][::-1]
+        utxo = reverse_bytes(tx[pointer : pointer + 32])
         pointer += 32
 
         vout = int.from_bytes(tx[pointer : pointer + 4], "little")
@@ -101,7 +101,7 @@ def extract_tx(tx):
     else:
         tx_hash = double256(tx)
 
-    txid = bytes.decode(hexlify(tx_hash[::-1]))
+    txid = bytes.decode(hexlify(reverse_bytes(tx_hash)))
 
 
     json_tx = {

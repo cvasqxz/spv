@@ -1,3 +1,8 @@
+def reverse_bytes(b):
+    """Reverse bytes - MicroPython compatible"""
+    return bytes(reversed(b))
+
+
 def b2ip(s):
     ipv = s.strip(b"\x00")
     ip = ".".join([str(n) for n in ipv[-4:]])

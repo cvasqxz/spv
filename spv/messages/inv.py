@@ -1,4 +1,4 @@
-from spv.utils.byte import parse_varint, create_varint
+from spv.utils.byte import parse_varint, create_varint, reverse_bytes
 
 inv_types = {
     0x01: "MSG_TX",
@@ -16,7 +16,7 @@ def parse_inv(s):
         inv_type = int.from_bytes(inv[0:4], "little")
         inv_type = inv_types[inv_type]
 
-        inv_content = inv[4:][::-1]
+        inv_content = reverse_bytes(inv[4:])
 
         inv_array.append({"type": inv_type, "content": inv_content})
 
