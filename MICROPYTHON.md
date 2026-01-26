@@ -21,6 +21,44 @@ n.to_bytes(4, "little")
 - `spv/messages/version.py` - create_version()
 - `spv/messages/default.py` - create_feefilter()
 
+### 2. Conversión a `bytearray` para `socket.send()`
+
+MicroPython requiere `bytearray` en lugar de `bytes` para `socket.send()`:
+
+```python
+# Antes
+self.sock.send(self.magic + header + message)
+
+# Ahora
+message = bytearray(self.magic + header + message)
+self.sock.send(message)
+```
+
+**Archivos modificados:**
+- `spv/peer.py` - handshake(), send_message(), _send_pending_messages()
+
+### 3. Manejo de `socket.getaddrinfo()` en MicroPython
+
+MicroPython retorna direcciones como `bytearray` en lugar de tuplas `(host, port)`:
+
+```python
+# Python estándar: ('127.0.0.1', 8333)
+# MicroPython: bytearray(b'\x02\x00\x20\x8d...')
+```
+
+**Solución:** Usar `sockaddr` directamente para `socket.connect()` y decodificar solo para mensajes:
+
+```python
+# Peer acepta sockaddr (formato nativo) y host/port (strings para mensajes)
+peer = Peer(MAGIC, sockaddr, host, port)
+peer.connect()  # Usa sockaddr directamente
+peer.handshake()  # Usa host/port para crear mensaje version
+```
+
+**Archivos modificados:**
+- `spv/peer.py` - Constructor ahora acepta `sockaddr`, `host`, `port`
+- `__main__.py` - Función `decode_sockaddr()` para extraer host/port
+
 ### 2. Compatibilidad Total
 
 Los siguientes métodos ya eran compatibles:
