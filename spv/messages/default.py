@@ -11,7 +11,7 @@ def parse_feefilter(s):
 
 
 def create_feefilter(i):
-    return (i).to_bytes(8, byteorder="little")
+    return (i).to_bytes(8, "little")
 
 
 def parse_sendcmpct(s):

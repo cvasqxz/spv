@@ -32,13 +32,13 @@ def parse_varint(s):
 
 def create_varint(i):
     if i < 0xFD:
-        return i.to_bytes(1, byteorder="little")
+        return i.to_bytes(1, "little")
 
     if i >= 0xFD and i <= 0xFFFF:
-        return b"\xFD" + i.to_bytes(2, byteorder="little")
+        return b"\xFD" + i.to_bytes(2, "little")
 
     if i > 0xFFFF and i <= 0xFFFFFFFF:
-        return b"\xFE" + i.to_bytes(4, byteorder="little")
+        return b"\xFE" + i.to_bytes(4, "little")
 
     if i > 0xFFFFFFFF:
-        return b"\xFF" + i.to_bytes(8, byteorder="little")
+        return b"\xFF" + i.to_bytes(8, "little")
