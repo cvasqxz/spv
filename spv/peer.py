@@ -4,14 +4,13 @@ from spv.messages.version import create_version, parse_version
 from spv.messages.header import create_header, verify_header
 from spv.messages.addr import parse_addr
 from spv.messages.inv import parse_inv
+from spv.utils.byte import decode_sockaddr
 
 
 class Peer:
-    def __init__(self, magic, sockaddr, host, port, client_agent="/cvasqxz_spv:0.1.0/", version=70016):
+    def __init__(self, magic, sockaddr, client_agent="/cvasqxz_spv:0.1.0/", version=70016):
         self.magic = magic
         self.sockaddr = sockaddr  # Native socket address for connect()
-        self.host = host           # String IP for version message
-        self.port = port           # Integer port for version message
         self.client_agent = client_agent
         self.version = version
         self.sock = None
@@ -28,7 +27,8 @@ class Peer:
         self.sock.connect(self.sockaddr)
 
     def handshake(self):
-        version_message = create_version(self.version, (self.host, self.port), self.client_agent)
+        host, port = decode_sockaddr(self.sockaddr)
+        version_message = create_version(self.version, (host, port), self.client_agent)
         header = create_header("version", version_message)
         # MicroPython requires bytearray for socket.send()
         message = bytearray(self.magic + header + version_message)

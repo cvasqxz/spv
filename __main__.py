@@ -1,5 +1,6 @@
 import socket
 from spv.peer import Peer
+from spv.utils.byte import decode_sockaddr
 from random import choice
 
 DNS = [
@@ -15,22 +16,6 @@ MAGIC = b'\xf9\xbe\xb4\xd9'
 PORT = 8333
 
 
-def decode_sockaddr(addr):
-    """Decode socket address from MicroPython bytearray format"""
-    if isinstance(addr, (tuple, list)) and isinstance(addr[0], str):
-        # Standard Python format: ('127.0.0.1', 8333)
-        return addr[0], addr[1]
-    elif isinstance(addr, (bytearray, bytes)):
-        # MicroPython format: bytearray with packed address
-        # Bytes 2-3: port (big-endian)
-        # Bytes 4-7: IPv4 address
-        port = int.from_bytes(addr[2:4], "big")
-        ip = ".".join(str(b) for b in addr[4:8])
-        return ip, port
-    else:
-        # Fallback: try direct unpacking
-        return addr[0], addr[1]
-
 def main():
     nodes = []
 
@@ -42,7 +27,7 @@ def main():
         except Exception as e:
             print(f"{e}")
 
-    tcp_nodes = [n for n in nodes if n[1] == socket.SOCK_STREAM]
+    tcp_nodes = [n for n in nodes if n[0] == socket.AF_INET and n[1] == socket.SOCK_STREAM]
 
     if not tcp_nodes:
         print("No IPs found")
@@ -53,7 +38,7 @@ def main():
     host, port = decode_sockaddr(sockaddr)
 
     print(f"connecting to {host}:{port}")
-    peer = Peer(MAGIC, sockaddr, host, port)
+    peer = Peer(MAGIC, sockaddr)
 
     try:
         peer.connect()
