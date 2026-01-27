@@ -1,7 +1,8 @@
-import socket
 from spv.peer import Peer
 from spv.utils.byte import decode_sockaddr
-from random import choice
+
+import socket
+import random
 
 DNS = [
     "seed.bitcoin.wiz.biz",
@@ -13,27 +14,25 @@ DNS = [
     "seed.bitcoin.wiz.biz"
 ]
 MAGIC = b'\xf9\xbe\xb4\xd9'
-PORT = 8333
 
 
 def main():
-    nodes = []
+    nodes_found = []
 
     for domain in DNS:
         try:
-            new_nodes = socket.getaddrinfo(domain, PORT)
+            new_nodes = socket.getaddrinfo(domain, 8333, socket.AF_INET, socket.SOCK_STREAM)
             print(f"DNS: {domain.upper():<32} {len(new_nodes)} IP found")
-            nodes += new_nodes
+            nodes_found += new_nodes
+
         except Exception as e:
             print(f"{e}")
 
-    tcp_nodes = [n for n in nodes if n[0] == socket.AF_INET and n[1] == socket.SOCK_STREAM]
-
-    if not tcp_nodes:
+    if not nodes_found:
         print("No IPs found")
         return
 
-    node = choice(tcp_nodes)
+    node = random.choice(nodes_found)
     family, kind, proto, _, sockaddr = node
     host, port = decode_sockaddr(sockaddr)
 
