@@ -2,7 +2,7 @@ import socket
 from spv.messages.default import pong, verack, parse_sendcmpct, parse_feefilter, create_feefilter
 from spv.messages.version import create_version, parse_version
 from spv.messages.header import create_header, verify_header
-from spv.messages.addr import parse_addr
+from spv.messages.addr import parse_addr, parse_addrv2
 from spv.messages.inv import parse_inv
 
 
@@ -13,6 +13,11 @@ class Peer:
         self.client_agent = client_agent
         self.version = version
         self.sock = None
+
+        # Handshake state
+        self.version_received = False
+        self.verack_received = False
+        self.handshake_completed = False
 
         self.buffer = b""
         self.response_array = []
@@ -31,7 +36,13 @@ class Peer:
         self.sock.send(self.magic + header + version_message)
         print(f"send version ({self.client_agent}, {self.version})")
 
-        self.response_array.append({"type": "feefilter", "content": create_feefilter(1000)})
+    def _check_handshake_complete(self):
+        if self.version_received and self.verack_received and not self.handshake_completed:
+            self.handshake_completed = True
+            print("Handshake complete")
+            # Queue messages that should only be sent after handshake
+            self.response_array.append({"type": "getaddr", "content": b""})
+            self.response_array.append({"type": "feefilter", "content": create_feefilter(1000)})
 
     def send_message(self, msg_type, msg_content):
         header = create_header(msg_type, msg_content)
@@ -65,10 +76,22 @@ class Peer:
                 addrs = parse_addr(response)
                 print(f"\taddresses: {addrs}")
 
+            if response_type == "addrv2":
+                addrs = parse_addrv2(response)
+                print(f"\taddrv2 ({len(addrs)} addresses)")
+                for addr in addrs:
+                    print(f"\t\t{addr['type']:10} {addr['address']:40} {addr['port']:5}")
+
             if response_type == "version":
                 agent, service, version = parse_version(response)
                 self.response_array.append({"type": "verack", "content": verack()})
                 print(f"\tversion ({agent}, {version}, {service})")
+                self.version_received = True
+                self._check_handshake_complete()
+
+            if response_type == "verack":
+                self.verack_received = True
+                self._check_handshake_complete()
 
             if response_type == "ping":
                 self.response_array.append({"type": "pong", "content": pong(response)})
@@ -97,7 +120,7 @@ class Peer:
             print(f"SEND {response_type}")
 
     def run(self):
-        while self.is_connected:
+        while self.is_connected():
             try:
                 # SOCKET BUFFER
                 packet_recv = self.sock.recv(1024)
@@ -111,7 +134,7 @@ class Peer:
                 # Process received messages
                 self._process_messages()
 
-                # Send pending messages
+                # Send pending messages (including VERACK which is part of handshake)
                 self._send_pending_messages()
 
             except Exception as e:
