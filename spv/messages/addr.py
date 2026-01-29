@@ -1,6 +1,5 @@
-from spv.utils.byte import parse_varint, b2ip
+from spv.utils.byte import parse_varint, b2ip, to_hex
 from time import localtime
-from binascii import hexlify
 
 
 def parse_addr(s):
@@ -73,7 +72,7 @@ def parse_addrv2(s):
         elif addr_type == 1:  # IPv6
             address_str = ":".join(f"{int.from_bytes(address_bytes[i:i+2], 'big'):x}" for i in range(0, 16, 2))
         else:  # Tor, I2P, CJDNS (in hex)
-            address_str = hexlify(address_bytes).decode()
+            address_str = to_hex(address_bytes)
 
         addr_array.append({
             "type": type_name,

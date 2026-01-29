@@ -1,6 +1,5 @@
 from time import time, localtime
 from spv.utils.byte import ip2b
-from binascii import hexlify
 
 SERVICES = {
     "NODE_NETWORK": (1 << 0),

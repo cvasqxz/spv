@@ -3,6 +3,19 @@ def reverse_bytes(b):
     return bytes(reversed(b))
 
 
+def to_hex(data):
+    """
+    Convert bytes to hex string.
+    MicroPython has a bug where b''.hex() returns b'' instead of ''.
+    This function handles that case.
+    """
+    result = data.hex()
+    # MicroPython bug: empty bytes .hex() returns bytes instead of string
+    if isinstance(result, bytes):
+        return result.decode()
+    return result
+
+
 def decode_sockaddr(addr):
     """Decode socket address from MicroPython bytearray format"""
     if isinstance(addr, (tuple, list)) and isinstance(addr[0], str):

@@ -4,6 +4,7 @@ from spv.messages.version import create_version, parse_version
 from spv.messages.header import create_header, verify_header
 from spv.messages.addr import parse_addr, parse_addrv2
 from spv.messages.inv import parse_inv
+from spv.messages.tx import parse_tx
 from spv.utils.byte import decode_sockaddr
 
 
@@ -79,13 +80,11 @@ class Peer:
             # ACTIONS
             if response_type == "addr":
                 addrs = parse_addr(response)
-                print(f"\taddresses: {addrs}")
+                print(f"\taddresses {len(addrs)}")
 
             if response_type == "addrv2":
                 addrs = parse_addrv2(response)
-                print(f"\taddrv2 ({len(addrs)} addresses)")
-                for addr in addrs:
-                    print(f"\t\t{addr['type']:10} {addr['address']:40} {addr['port']:5}")
+                print(f"\tv2 addresses {len(addrs)})")
 
             if response_type == "version":
                 agent, service, version = parse_version(response)
@@ -113,6 +112,10 @@ class Peer:
                 invs = parse_inv(response)
                 print(f"\tinv ({len(invs)} headers)")
                 self.response_array.append({"type": "getdata", "content": response})
+
+            if response_type == "tx":
+                tx = parse_tx(response)
+                print(f"\ttransaction: {tx}")
 
     def _send_pending_messages(self):
         while self.response_array:
