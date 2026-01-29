@@ -1,3 +1,25 @@
+def reverse_bytes(b):
+    """Reverse bytes - MicroPython compatible"""
+    return bytes(reversed(b))
+
+
+def decode_sockaddr(addr):
+    """Decode socket address from MicroPython bytearray format"""
+    if isinstance(addr, (tuple, list)) and isinstance(addr[0], str):
+        # Standard Python format: ('127.0.0.1', 8333)
+        return addr[0], addr[1]
+    elif isinstance(addr, (bytearray, bytes)):
+        # MicroPython format: bytearray with packed address
+        # Bytes 2-3: port (big-endian)
+        # Bytes 4-7: IPv4 address
+        port = int.from_bytes(addr[2:4], "big")
+        ip = ".".join(str(b) for b in addr[4:8])
+        return ip, port
+    else:
+        # Fallback: try direct unpacking
+        return addr[0], addr[1]
+
+
 def b2ip(s):
     ipv = s.strip(b"\x00")
     ip = ".".join([str(n) for n in ipv[-4:]])
@@ -32,13 +54,13 @@ def parse_varint(s):
 
 def create_varint(i):
     if i < 0xFD:
-        return i.to_bytes(1, byteorder="little")
+        return i.to_bytes(1, "little")
 
     if i >= 0xFD and i <= 0xFFFF:
-        return b"\xFD" + i.to_bytes(2, byteorder="little")
+        return b"\xFD" + i.to_bytes(2, "little")
 
     if i > 0xFFFF and i <= 0xFFFFFFFF:
-        return b"\xFE" + i.to_bytes(4, byteorder="little")
+        return b"\xFE" + i.to_bytes(4, "little")
 
     if i > 0xFFFFFFFF:
-        return b"\xFF" + i.to_bytes(8, byteorder="little")
+        return b"\xFF" + i.to_bytes(8, "little")

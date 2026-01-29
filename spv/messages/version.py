@@ -1,4 +1,4 @@
-from time import time, strftime, localtime
+from time import time, localtime
 from spv.utils.byte import ip2b
 from binascii import hexlify
 
@@ -21,17 +21,17 @@ def create_version(int_version, host_port, agent):
     
     host, port = host_port
 
-    VERSION = (int_version).to_bytes(4, byteorder="little")
-    SERVICE = (0).to_bytes(8, byteorder="little")
-    EPOCH = (int(time())).to_bytes(8, byteorder="little")
+    VERSION = (int_version).to_bytes(4, "little")
+    SERVICE = (0).to_bytes(8, "little")
+    EPOCH = (int(time())).to_bytes(8, "little")
     RECV_ADDR = ip2b(host)
-    RECV_PORT = (port).to_bytes(2, byteorder="big")
-    NODE_ADDR = (0).to_bytes(16, byteorder="big")
-    NODE_PORT = (0).to_bytes(2, byteorder="big")
-    NONCE = (0).to_bytes(8, byteorder="little")
-    LENGTH_USERAGENT = (len(agent)).to_bytes(1, byteorder="little")
+    RECV_PORT = (port).to_bytes(2, "big")
+    NODE_ADDR = (0).to_bytes(16, "big")
+    NODE_PORT = (0).to_bytes(2, "big")
+    NONCE = (0).to_bytes(8, "little")
+    LENGTH_USERAGENT = (len(agent)).to_bytes(1, "little")
     USERAGENT = agent.encode()
-    START_HEIGHT = (1).to_bytes(4, byteorder="little")
+    START_HEIGHT = (1).to_bytes(4, "little")
 
     RELAY = b"\x01"
 

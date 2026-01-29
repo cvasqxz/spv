@@ -2,7 +2,10 @@ from spv.utils.hash import double256
 
 
 def create_header(type, msg):
-    type_msg = ("{:\x00<%i}" % 12).format(type).encode()
+    # Command name: 12 bytes, null-padded
+    type_bytes = type.encode()
+    type_msg = type_bytes + b'\x00' * (12 - len(type_bytes))
+
     length_msg = (len(msg)).to_bytes(4, "little")
     checksum = double256(msg)[:4]
 

@@ -4,12 +4,13 @@ from spv.messages.version import create_version, parse_version
 from spv.messages.header import create_header, verify_header
 from spv.messages.addr import parse_addr, parse_addrv2
 from spv.messages.inv import parse_inv
+from spv.utils.byte import decode_sockaddr
 
 
 class Peer:
-    def __init__(self, magic, host, port, client_agent="/cvasqxz_spv:0.1.0/", version=70016):
+    def __init__(self, magic, sockaddr, client_agent="/cvasqxz_spv:0.1.0/", version=70016):
         self.magic = magic
-        self.addr = (host, port)
+        self.sockaddr = sockaddr  # Native socket address for connect()
         self.client_agent = client_agent
         self.version = version
         self.sock = None
@@ -28,12 +29,15 @@ class Peer:
     def connect(self, timeout=60):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(timeout)
-        self.sock.connect(self.addr)
+        self.sock.connect(self.sockaddr)
 
     def handshake(self):
-        version_message = create_version(self.version, self.addr, self.client_agent)
+        host, port = decode_sockaddr(self.sockaddr)
+        version_message = create_version(self.version, (host, port), self.client_agent)
         header = create_header("version", version_message)
-        self.sock.send(self.magic + header + version_message)
+        # MicroPython requires bytearray for socket.send()
+        message = bytearray(self.magic + header + version_message)
+        self.sock.send(message)
         print(f"send version ({self.client_agent}, {self.version})")
 
     def _check_handshake_complete(self):
@@ -46,7 +50,8 @@ class Peer:
 
     def send_message(self, msg_type, msg_content):
         header = create_header(msg_type, msg_content)
-        self.sock.send(self.magic + header + msg_content)
+        message = bytearray(self.magic + header + msg_content)
+        self.sock.send(message)
         print(f"SEND {msg_type}")
 
     def _process_messages(self):
@@ -116,7 +121,8 @@ class Peer:
             response_content = response["content"]
             header = create_header(response_type, response_content)
 
-            self.sock.send(self.magic + header + response_content)
+            message = bytearray(self.magic + header + response_content)
+            self.sock.send(message)
             print(f"SEND {response_type}")
 
     def run(self):
