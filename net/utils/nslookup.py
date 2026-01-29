@@ -1,7 +1,7 @@
 import socket
 import struct
 
-def dns_query(domain, dns_server='8.8.8.8'):
+def dns_query(domain, dns_server='1.1.1.1', max_retries=3):
     # Construir query DNS para un registro A
     tid = 0x1234  # ID de la consulta
     flags = 0x0100  # estándar
@@ -19,18 +19,30 @@ def dns_query(domain, dns_server='8.8.8.8'):
 
     packet = header + question
 
-    # Socket UDP a DNS
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.settimeout(3)
-
     # MicroPython requires sockaddr format from getaddrinfo
     addr_info = socket.getaddrinfo(dns_server, 53, socket.AF_INET, socket.SOCK_DGRAM)
     sockaddr = addr_info[0][4]
 
-    # MicroPython requires bytearray for socket.sendto()
-    s.sendto(bytearray(packet), sockaddr)
-    data, _ = s.recvfrom(512)
-    s.close()
+    # Retry loop for UDP reliability
+    for attempt in range(max_retries):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(5)  # 5 seconds timeout per attempt
+
+        try:
+            # MicroPython requires bytearray for socket.sendto()
+            s.sendto(bytearray(packet), sockaddr)
+            data, _ = s.recvfrom(512)
+            s.close()
+            break  # Success, exit retry loop
+        except OSError as e:
+            s.close()
+            if attempt == max_retries - 1:
+                # Last attempt failed, raise exception
+                raise Exception(f'DNS query failed after {max_retries} attempts: {e}')
+            # Otherwise, retry
+            continue
+    else:
+        raise Exception(f'DNS query failed after {max_retries} attempts')
 
     # Parsear la respuesta (buscar tipo 1 clase 1 en las respuestas)
     rcode = (data[3] & 0x0F)
@@ -62,10 +74,3 @@ def dns_query(domain, dns_server='8.8.8.8'):
             addrs.append(ip_addr)
         pos += rdlen
     return addrs
-
-if __name__ == "__main__":
-    # Ejemplo de uso:
-    ips = dns_query('seed.bitcoin.wiz.biz')
-    print("Respuestas DNS:")
-    for ip in ips:
-        print("  ", ip)
