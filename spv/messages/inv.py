@@ -16,11 +16,24 @@ def parse_inv(s):
 
     for i in range(length_inv):
         inv = s[bytes_read + 36 * i : bytes_read + 36 * (i + 1)]
-        inv_type = int.from_bytes(inv[0:4], "little")
-        inv_type = inv_types[inv_type]
+        inv_type_num = int.from_bytes(inv[0:4], "little")
+        inv_type = inv_types[inv_type_num]
 
         inv_content = reverse_bytes(inv[4:])
 
-        inv_array.append({"type": inv_type, "content": inv_content})
+        inv_array.append({"type": inv_type, "type_num": inv_type_num, "content": inv_content})
 
     return inv_array
+
+
+def create_getdata(inv_items):
+    """Create getdata message from list of inventory items"""
+    count = create_varint(len(inv_items))
+    payload = count
+
+    for item in inv_items:
+        inv_type = item["type_num"].to_bytes(4, "little")
+        inv_hash = reverse_bytes(item["content"])
+        payload += inv_type + inv_hash
+
+    return payload

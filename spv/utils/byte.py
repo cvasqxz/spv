@@ -1,14 +1,8 @@
 def reverse_bytes(b):
-    """Reverse bytes - MicroPython compatible"""
     return bytes(reversed(b))
 
 
 def to_hex(data):
-    """
-    Convert bytes to hex string.
-    MicroPython has a bug where b''.hex() returns b'' instead of ''.
-    This function handles that case.
-    """
     result = data.hex()
     # MicroPython bug: empty bytes .hex() returns bytes instead of string
     if isinstance(result, bytes):
@@ -77,3 +71,32 @@ def create_varint(i):
 
     if i > 0xFFFFFFFF:
         return b"\xFF" + i.to_bytes(8, "little")
+
+
+def extract_next_message(buffer, magic, offset=0):
+    # Search for magic number starting from current offset
+    magic_pos = buffer.find(magic, offset)
+
+    if magic_pos == -1:
+        # No magic found, can discard buffer up to offset
+        return None, None, offset
+
+    # Check if we have enough bytes for header (20 bytes after magic)
+    header_start = magic_pos + len(magic)
+    if header_start + 20 > len(buffer):
+        # Incomplete header, preserve from magic position
+        return None, None, magic_pos
+
+    # Read payload length from header
+    payload_length = int.from_bytes(buffer[header_start + 12:header_start + 16], "little")
+
+    # Check if we have the complete message
+    message_end = header_start + 20 + payload_length
+    if message_end > len(buffer):
+        # Incomplete message, preserve from magic position
+        return None, None, magic_pos
+
+    # Extract complete message (header + payload, without magic)
+    message = buffer[header_start:message_end]
+
+    return message, message_end, magic_pos
