@@ -1,5 +1,5 @@
 import socket
-from spv.messages.default import pong, verack, parse_sendcmpct, parse_feefilter, create_feefilter
+from spv.messages.default import pong, verack, wtxidrelay, sendaddrv2, parse_sendcmpct, parse_feefilter, create_feefilter
 from spv.messages.version import create_version, parse_version
 from spv.messages.header import create_header, verify_header
 from spv.messages.addr import parse_addr, parse_addrv2
@@ -56,66 +56,98 @@ class Peer:
         print(f"SEND {msg_type}")
 
     def _process_messages(self):
-        data = self.buffer
-        buffer_pointer = data.rfind(self.magic)
+        offset = 0
 
-        if buffer_pointer == -1:
-            self.buffer = data
-            data_split = []
-        else:
-            self.buffer = data[buffer_pointer:]
-            data_split = data[:buffer_pointer].split(self.magic)
+        while True:
+            # Search for magic number starting from current offset
+            magic_pos = self.buffer.find(self.magic, offset)
 
-        # RESPONSE PARSER
-        for response in data_split:
-            if len(response) > 0 and verify_header(response):
-                response_type = bytes.decode(response[:12].strip(b"\x00"))
+            if magic_pos == -1:
+                # No magic found, keep entire buffer from offset
+                self.buffer = self.buffer[offset:]
+                break
+
+            # Check if we have enough bytes for header (20 bytes after magic)
+            header_start = magic_pos + len(self.magic)
+            if header_start + 20 > len(self.buffer):
+                # Incomplete header, keep from magic position
+                self.buffer = self.buffer[magic_pos:]
+                break
+
+            # Read payload length from header
+            payload_length = int.from_bytes(self.buffer[header_start + 12:header_start + 16], "little")
+
+            # Check if we have the complete message
+            message_end = header_start + 20 + payload_length
+            if message_end > len(self.buffer):
+                # Incomplete message, keep from magic position
+                self.buffer = self.buffer[magic_pos:]
+                break
+
+            # Extract complete message (header + payload, without magic)
+            message = self.buffer[header_start:message_end]
+
+            # Verify header
+            if verify_header(message):
+                response_type = bytes.decode(message[:12].strip(b"\x00"))
                 print(f"RECV {response_type}")
-            else:
-                continue
 
-            # REMOVE HEADER
-            response = response[20:]
+                # Extract payload (skip 20-byte header)
+                payload = message[20:]
 
-            # ACTIONS
-            if response_type == "addr":
-                addrs = parse_addr(response)
-                print(f"\taddresses {len(addrs)}")
+                # ACTIONS
+                if response_type == "addr":
+                    addrs = parse_addr(payload)
+                    print(f"\taddresses {len(addrs)}")
 
-            if response_type == "addrv2":
-                addrs = parse_addrv2(response)
-                print(f"\tv2 addresses {len(addrs)})")
+                if response_type == "addrv2":
+                    addrs = parse_addrv2(payload)
+                    print(f"\tv2 addresses {len(addrs)}")
 
-            if response_type == "version":
-                agent, service, version = parse_version(response)
-                self.response_array.append({"type": "verack", "content": verack()})
-                print(f"\tversion ({agent}, {version}, {service})")
-                self.version_received = True
-                self._check_handshake_complete()
+                if response_type == "version":
+                    ver = parse_version(payload)
+                    print(f"\tversion {ver}")
+                    # BIP 339 & BIP 155: Send wtxidrelay and sendaddrv2 before verack
+                    self.response_array.append({"type": "wtxidrelay", "content": wtxidrelay()})
+                    self.response_array.append({"type": "sendaddrv2", "content": sendaddrv2()})
+                    self.response_array.append({"type": "verack", "content": verack()})
+                    self.version_received = True
+                    self._check_handshake_complete()
 
-            if response_type == "verack":
-                self.verack_received = True
-                self._check_handshake_complete()
+                if response_type == "verack":
+                    self.verack_received = True
+                    self._check_handshake_complete()
 
-            if response_type == "ping":
-                self.response_array.append({"type": "pong", "content": pong(response)})
+                if response_type == "wtxidrelay":
+                    # BIP 339: Peer supports wtxid-based transaction relay
+                    pass
 
-            if response_type == "sendcmpct":
-                usecmpct, cmpctnum = parse_sendcmpct(response)
-                print(f"\tsendcmpct ({usecmpct}, {cmpctnum})")
+                if response_type == "sendaddrv2":
+                    # BIP 155: Peer supports addrv2 message format
+                    pass
 
-            if response_type == "feefilter":
-                minfee = parse_feefilter(response)
-                print(f"\tfeefilter ({minfee} satoshis)")
+                if response_type == "ping":
+                    self.response_array.append({"type": "pong", "content": pong(payload)})
 
-            if response_type == "inv":
-                invs = parse_inv(response)
-                print(f"\tinv ({len(invs)} headers)")
-                self.response_array.append({"type": "getdata", "content": response})
+                if response_type == "sendcmpct":
+                    usecmpct, cmpctnum = parse_sendcmpct(payload)
+                    print(f"\tsendcmpct ({usecmpct}, {cmpctnum})")
 
-            if response_type == "tx":
-                tx = parse_tx(response)
-                print(f"\ttransaction: {tx}")
+                if response_type == "feefilter":
+                    minfee = parse_feefilter(payload)
+                    print(f"\tfeefilter ({minfee} satoshis)")
+
+                if response_type == "inv":
+                    invs = parse_inv(payload)
+                    print(f"\tinv ({len(invs)} headers)")
+                    self.response_array.append({"type": "getdata", "content": payload})
+
+                if response_type == "tx":
+                    tx = parse_tx(payload)
+                    print(f"\ttransaction: {tx}")
+
+            # Move offset past this message
+            offset = message_end
 
     def _send_pending_messages(self):
         while self.response_array:
@@ -130,29 +162,24 @@ class Peer:
 
     def run(self):
         while self.is_connected():
-            try:
-                # SOCKET BUFFER
-                packet_recv = self.sock.recv(1024)
+            packet_recv = self.sock.recv(1024)
 
-                if not packet_recv:
-                    print("Connection closed by peer")
-                    break
-
-                self.buffer += packet_recv
-
-                # Process received messages
-                self._process_messages()
-
-                # Send pending messages (including VERACK which is part of handshake)
-                self._send_pending_messages()
-
-            except Exception as e:
-                print(f"Error in run loop: {e}")
+            if not packet_recv:
+                print("Connection closed by peer")
                 break
+
+            self.buffer += packet_recv
+
+            self._process_messages()
+            self._send_pending_messages()
 
         self.close()
 
     def close(self):
         if self.is_connected():
-            self.sock.close()
-            print("Connection closed")
+            try:
+                self.sock.close()
+                print("Connection closed")
+            except:
+                pass
+        self.sock = None

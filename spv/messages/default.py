@@ -6,8 +6,18 @@ def verack():
     return b""
 
 
+def wtxidrelay():
+    # BIP 339: wtxidrelay message has no payload
+    return b""
+
+
+def sendaddrv2():
+    # BIP 155: sendaddrv2 message has no payload
+    return b""
+
+
 def parse_feefilter(s):
-    return int.from_bytes(s, "little")
+    return int.from_bytes(s[:8], "little")
 
 
 def create_feefilter(i):
@@ -15,7 +25,7 @@ def create_feefilter(i):
 
 
 def parse_sendcmpct(s):
-    is_cmpctblock = bool(s)
-    cmpct_number = int.from_bytes(s[1:], "little")
+    announce = bool(s[0])  # 1 byte: enable/disable compact blocks
+    version = int.from_bytes(s[1:9], "little")  # 8 bytes: version number
 
-    return is_cmpctblock, cmpct_number
+    return announce, version

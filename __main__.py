@@ -38,6 +38,9 @@ def main():
         print("connection successfully")
         peer.handshake()
         peer.run()
+    except KeyboardInterrupt:
+        print("\nShutting down...")
+        peer.close()
     except Exception as e:
         print(f"error {e}")
         peer.close()

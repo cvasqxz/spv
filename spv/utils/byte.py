@@ -56,7 +56,7 @@ def parse_varint(s):
         return s[0], 1
 
     if s[0] == 0xFD:
-        return int.from_bytes(s[1:4], "little"), 3
+        return int.from_bytes(s[1:3], "little"), 3
 
     if s[0] == 0xFE:
         return int.from_bytes(s[1:5], "little"), 5

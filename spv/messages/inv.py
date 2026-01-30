@@ -5,6 +5,9 @@ inv_types = {
     0x02: "MSG_BLOCK",
     0x03: "MSG_FILTERED_BLOCK",
     0x04: "MSG_CMPCT_BLOCK",
+    0x05: "MSG_WITNESS_TX",
+    0x40000001: "MSG_WITNESS_TX",
+    0x40000002: "MSG_WITNESS_BLOCK",
 }
 
 def parse_inv(s):
