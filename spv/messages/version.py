@@ -1,5 +1,5 @@
 from time import time, localtime
-from spv.utils.byte import ip2b, b2ip
+from spv.utils import ip2b, b2ip
 import random
 
 SERVICES = {

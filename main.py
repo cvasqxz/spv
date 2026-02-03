@@ -1,6 +1,6 @@
 from spv.peer import Peer
-from spv.utils.byte import decode_sockaddr
-from net.utils.nslookup import dns_query
+from spv.utils import decode_sockaddr
+from net.utils import dns_query
 
 import socket
 import random

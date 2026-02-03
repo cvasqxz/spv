@@ -1,4 +1,4 @@
-from spv.utils.byte import parse_varint, b2ip, to_hex
+from spv.utils import parse_varint, b2ip, to_hex
 from time import localtime
 
 

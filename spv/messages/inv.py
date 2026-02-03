@@ -1,11 +1,11 @@
-from spv.utils.byte import parse_varint, create_varint, reverse_bytes
+from spv.utils import parse_varint, create_varint, reverse_bytes
 
 inv_types = {
     0x01: "MSG_TX",
     0x02: "MSG_BLOCK",
     0x03: "MSG_FILTERED_BLOCK",
     0x04: "MSG_CMPCT_BLOCK",
-    0x05: "MSG_WITNESS_TX",
+    0x05: "MSG_WTX",
     0x40000001: "MSG_WITNESS_TX",
     0x40000002: "MSG_WITNESS_BLOCK",
 }

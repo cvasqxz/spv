@@ -1,5 +1,4 @@
-from spv.utils.hash import double256
-from spv.utils.byte import parse_varint, reverse_bytes, to_hex
+from spv.utils import double256, parse_varint, reverse_bytes, to_hex
 
 
 def parse_tx(tx):
