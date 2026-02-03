@@ -6,7 +6,7 @@ from spv.messages.header import create_header, verify_header
 from spv.messages.addr import parse_addr, parse_addrv2
 from spv.messages.inv import parse_inv, create_getdata
 from spv.messages.tx import parse_tx
-from spv.utils.byte import decode_sockaddr, extract_next_message
+from spv.utils import decode_sockaddr, extract_next_message
 
 
 class Peer:
@@ -27,7 +27,7 @@ class Peer:
 
         # Enable garbage collection and set threshold
         gc.enable()
-        gc.threshold(4096)
+        gc.threshold(16384)  # 16 KB - balance between memory usage and GC frequency
 
     def is_connected(self):
         return self.sock is not None and self.sock.fileno() != -1
@@ -62,36 +62,24 @@ class Peer:
 
     def _process_messages(self):
         offset = 0
+        message_found = True
 
-        while True:
-            message, message_end, preserve_from = extract_next_message(self.buffer, self.magic, offset)
+        while message_found:
+            message, next_offset = extract_next_message(self.buffer, self.magic, offset)
 
             if message is None:
-                self.buffer = self.buffer[preserve_from:]
-                break
+                # No complete message available - preserve buffer from next_offset
+                self.buffer = self.buffer[next_offset:]
+                message_found = False
+            else:
+                # Process the message (already validated by extract_next_message)
+                command = bytes.decode(message[:12].strip(b"\x00"))
+                payload = message[20:]  # Skip 20-byte header
 
-            # Verify header
-            if verify_header(message):
-                response_type = bytes.decode(message[:12].strip(b"\x00"))
-                print(f"RECV {response_type}")
-
-                # Extract payload (skip 20-byte header)
-                payload = message[20:]
-
-                # ACTIONS
-                if response_type == "addr":
-                    addrs = parse_addr(payload)
-                    print(f"\taddresses {len(addrs)}")
-                    del addrs
-
-                if response_type == "addrv2":
-                    addrs = parse_addrv2(payload)
-                    print(f"\tv2 addresses {len(addrs)}")
-                    del addrs
-
-                if response_type == "version":
+                # Handle message by type
+                if command == "version":
                     ver = parse_version(payload)
-                    print(f"\tversion {ver}")
+                    print(f"RECV version {ver['user_agent'], ver['version']}")
                     # BIP 339 & BIP 155: Send wtxidrelay and sendaddrv2 before verack
                     self.response_array.append({"type": "wtxidrelay", "content": wtxidrelay()})
                     self.response_array.append({"type": "sendaddrv2", "content": sendaddrv2()})
@@ -100,45 +88,54 @@ class Peer:
                     self._check_handshake_complete()
                     del ver
 
-                if response_type == "verack":
+                elif command == "verack":
                     self.verack_received = True
                     self._check_handshake_complete()
 
-                if response_type == "ping":
+                elif command == "ping":
                     self.response_array.append({"type": "pong", "content": pong(payload)})
 
-                if response_type == "sendcmpct":
+                elif command == "addr":
+                    addrs = parse_addr(payload)
+                    print(f"RECV addresses {len(addrs)}")
+                    del addrs
+
+                elif command == "addrv2":
+                    addrs = parse_addrv2(payload)
+                    print(f"RECV v2 addresses {len(addrs)}")
+                    del addrs
+
+                elif command == "sendcmpct":
                     usecmpct, cmpctnum = parse_sendcmpct(payload)
-                    print(f"\tsendcmpct ({usecmpct}, {cmpctnum})")
+                    print(f"RECV sendcmpct ({usecmpct}, {cmpctnum})")
                     del usecmpct, cmpctnum
 
-                if response_type == "feefilter":
+                elif command == "feefilter":
                     minfee = parse_feefilter(payload)
-                    print(f"\tfeefilter ({minfee} satoshis)")
+                    print(f"RECV feefilter ({minfee} satoshis)")
                     del minfee
 
-                if response_type == "inv":
+                elif command == "inv":
                     invs = parse_inv(payload)
-                    print(f"\tinv ({len(invs)} items)")
+                    print(f"RECV inv ({len(invs)} items)")
 
                     # Filter only transactions (ignore blocks to save memory)
-                    tx_invs = [inv for inv in invs if inv["type"] in ["MSG_TX", "MSG_WITNESS_TX"]]
+                    tx_invs = [inv for inv in invs if inv["type"] in ["MSG_TX", "MSG_WTX", "MSG_WITNESS_TX"]]
 
                     if tx_invs:
                         getdata_payload = create_getdata(tx_invs)
                         self.response_array.append({"type": "getdata", "content": getdata_payload})
                         del getdata_payload
-                    
+
                     del invs, tx_invs
 
-                if response_type == "tx":
+                elif command == "tx":
                     tx = parse_tx(payload)
-                    print(f"\ttransaction: {tx}")
+                    print(f"RECV tx {tx['txid']}")
                     del tx
 
-            # Move offset past this message
-            offset = message_end
-            gc.collect()
+                # Continue processing from next message
+                offset = next_offset
 
     def _send_pending_messages(self):
         while self.response_array:
@@ -164,7 +161,8 @@ class Peer:
             self._process_messages()
             self._send_pending_messages()
 
-            # Trigger garbage collection to free processed messages
+            # Collect garbage once per recv cycle (not per message)
+            # The gc.threshold(16384) handles automatic collection between cycles
             gc.collect()
 
         self.close()
